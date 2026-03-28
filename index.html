@@ -27,6 +27,7 @@
   --rare: #60a5fa;
   --epic: #c084fc;
   --legendary: #fbbf24;
+  --junk: #ef4444;
 }
 
 body {
@@ -250,6 +251,7 @@ body::before {
 .rarity-rare { color: var(--rare); }
 .rarity-epic { color: var(--epic); }
 .rarity-legendary { color: var(--legendary); }
+.rarity-junk { color: var(--junk); }
 
 /* Legendary glow effect */
 .catch-result.legendary-catch {
@@ -570,6 +572,48 @@ body::before {
   margin-left: 6px;
 }
 
+/* ========== DOLPHIN FINE MODAL ========== */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-box {
+  background: var(--bg-card);
+  border: 2px solid var(--danger);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 380px;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(231, 76, 60, 0.3);
+  animation: catchPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modal-box .modal-emoji { font-size: 3.5rem; display: block; margin-bottom: 12px; }
+.modal-box .modal-title { font-size: 1.2rem; font-weight: 700; color: var(--danger); margin-bottom: 8px; }
+.modal-box .modal-text { font-size: 0.9rem; color: var(--text-dim); margin-bottom: 20px; line-height: 1.5; }
+.modal-box .modal-fine { font-size: 1.4rem; font-weight: 700; color: var(--danger); margin-bottom: 20px; }
+
+.modal-btn {
+  padding: 10px 28px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--danger);
+  color: #fff;
+  transition: all 0.2s;
+}
+
+.modal-btn:hover { filter: brightness(1.15); }
+
 /* ========== INVENTORY FULL WARNING ========== */
 .inv-warning {
   background: rgba(231, 76, 60, 0.12);
@@ -797,6 +841,10 @@ const FISH = [
   { id: 9,  name: 'Mythic Leviathan',  emoji: '🐉', value: 5000,  rarity: 'legendary', weight: 0.5  },
   { id: 10, name: 'Abyssal Kraken',    emoji: '🦑', value: 35000, rarity: 'legendary', weight: 0.1  },
   { id: 11, name: 'Celestial Whale',   emoji: '🐋', value: 50000, rarity: 'legendary', weight: 0.03 },
+  // Junk / special catches — not added to inventory
+  { id: 12, name: 'Old Shoe',          emoji: '👟', value: -50,   rarity: 'junk', weight: 40, junk: true },
+  { id: 13, name: 'Horseshoe',         emoji: '🧲', value: 0,     rarity: 'junk', weight: 60, junk: true },
+  { id: 14, name: 'Dolphin',           emoji: '🐬', value: -1000, rarity: 'junk', weight: 3,  junk: true, dolphin: true },
 ];
 
 /** Rod definitions — rarityBoost multiplies weights of fish index 3+ (rarer fish) */
@@ -905,14 +953,28 @@ function playSellSound() {
 
 /**
  * Get adjusted weights based on the equipped rod.
- * Rod's rarityBoost multiplies weights for fish at index 3+ (Salmon and above).
+ * Rod's rarityBoost multiplies weights for fish at index 3+ (Salmon and above),
+ * but NOT junk items — junk weights stay fixed.
+ * Dolphin only appears if net worth >= $1000.
  */
 function getAdjustedWeights() {
   const rod = RODS[state.equippedRod];
+  const netWorth = getNetWorth();
   return FISH.map((fish, i) => {
+    // Dolphin requires net worth >= 1000
+    if (fish.dolphin && netWorth < 1000) return 0;
+    // Junk items are not boosted by rods
+    if (fish.junk) return fish.weight;
     if (i >= 3) return fish.weight * rod.rarityBoost;
     return fish.weight;
   });
+}
+
+/** Calculate player's net worth (money + inventory value + cache value) */
+function getNetWorth() {
+  const invValue = state.inventory.reduce((sum, id) => sum + FISH[id].value, 0);
+  const cacheValue = state.cache.reduce((sum, id) => sum + FISH[id].value, 0);
+  return state.money + invValue + cacheValue;
 }
 
 /** Pick a random fish using weighted probability */
@@ -951,23 +1013,39 @@ function doCast() {
   setTimeout(() => {
     const fish = catchFish();
 
-    // Add to inventory
-    state.inventory.push(fish.id);
+    if (fish.junk) {
+      // Junk items: don't add to inventory, apply money effect immediately
+      if (fish.dolphin) {
+        // Dolphin: show fine modal
+        state.money = Math.max(0, state.money - 1000);
+        showDolphinModal();
+      } else if (fish.value < 0) {
+        // Old Shoe: lose money
+        state.money = Math.max(0, state.money + fish.value);
+        showToast(`${fish.emoji} You fished up an Old Shoe! -$${Math.abs(fish.value)}`);
+      } else {
+        // Horseshoe: $0
+        showToast(`${fish.emoji} You fished up a Horseshoe! Worth nothing.`);
+      }
+      playCatchSound('common');
+      displayCatch(fish);
+    } else {
+      // Normal fish: add to inventory
+      state.inventory.push(fish.id);
 
-    // Track recent catches
+      // Track best catch
+      if (state.bestCatchId === -1 || fish.id > state.bestCatchId) {
+        state.bestCatchId = fish.id;
+      }
+
+      playCatchSound(fish.rarity);
+      displayCatch(fish);
+    }
+
+    // Track recent catches for all types
     state.recentCatches.unshift(fish.id);
     if (state.recentCatches.length > 8) state.recentCatches.pop();
 
-    // Track best catch
-    if (state.bestCatchId === -1 || fish.id > state.bestCatchId) {
-      state.bestCatchId = fish.id;
-    }
-
-    // Play sound
-    playCatchSound(fish.rarity);
-
-    // Show catch
-    displayCatch(fish);
     updateUI();
     saveGame();
 
@@ -1079,12 +1157,25 @@ function displayCatch(fish) {
   const container = document.getElementById('catch-display');
   const isEpic = fish.rarity === 'epic';
   const isLegendary = fish.rarity === 'legendary';
-  const extraClass = isLegendary ? 'legendary-catch' : isEpic ? 'epic-catch' : '';
+  const isJunk = fish.rarity === 'junk';
+  const extraClass = isLegendary ? 'legendary-catch' : isEpic ? 'epic-catch' : isJunk ? 'shake' : '';
 
   let labelHTML = '';
   if (isEpic || isLegendary) {
     const prefix = isLegendary ? '✨ LEGENDARY CATCH!' : '⚡ EPIC CATCH!';
     labelHTML = `<div class="rare-label rarity-${fish.rarity}">${prefix}</div>`;
+  } else if (isJunk) {
+    labelHTML = `<div class="rare-label rarity-junk">Junk</div>`;
+  }
+
+  // Format value display
+  let valueHTML;
+  if (fish.value < 0) {
+    valueHTML = `<span style="color: var(--danger);">-$${Math.abs(fish.value).toLocaleString()}</span>`;
+  } else if (fish.value === 0) {
+    valueHTML = `<span style="color: var(--text-dim);">$0</span>`;
+  } else {
+    valueHTML = `$${fish.value.toLocaleString()}`;
   }
 
   container.innerHTML = `
@@ -1092,8 +1183,25 @@ function displayCatch(fish) {
       ${labelHTML}
       <span class="fish-emoji">${fish.emoji}</span>
       <div class="fish-name rarity-${fish.rarity}">${fish.name}</div>
-      <div class="fish-value">$${fish.value.toLocaleString()}</div>
+      <div class="fish-value">${valueHTML}</div>
     </div>`;
+}
+
+/** Show the dolphin fine modal */
+function showDolphinModal() {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <span class="modal-emoji">🐬</span>
+      <div class="modal-title">You caught a Dolphin!</div>
+      <div class="modal-text">Due to marine wildlife regulations, catching dolphins is strictly prohibited.</div>
+      <div class="modal-fine">Fine: -$1,000</div>
+      <button class="modal-btn" id="modal-dismiss-btn">Pay Fine</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById('modal-dismiss-btn').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
 }
 
 function updateUI() {
