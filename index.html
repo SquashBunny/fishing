@@ -221,10 +221,17 @@ body::before {
 }
 
 .catch-result .fish-emoji {
-  font-size: 3rem;
   display: block;
   margin-bottom: 6px;
+  line-height: 1;
 }
+
+.catch-result .fish-emoji .fish-icon { width: 64px; height: 64px; }
+
+/* Fish icon sizing */
+.fish-icon { width: 24px; height: 24px; display: inline-block; vertical-align: middle; }
+.fish-icon-lg { width: 64px; height: 64px; }
+.rod-icon .fish-icon { width: 32px; height: 32px; }
 
 .catch-result .fish-name {
   font-size: 1.2rem;
@@ -848,6 +855,181 @@ const FISH = [
   { id: 15, name: 'Shark',             emoji: '🦈', value: -500,  rarity: 'junk', weight: 1,  junk: true, shark: true },
 ];
 
+/**
+ * Custom SVG icons for each fish/item.
+ * Each is a complete <svg> string rendered inline.
+ */
+const FISH_ICONS = {
+  // Common Minnow — tiny silver fish
+  0: `<svg class="fish-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 32c0-8 10-16 28-16 4 0 8 4 10 8l6-6v12l-6-6c-2 4-6 8-10 8C22 48 12 40 12 32z" fill="#9ca3af"/>
+    <path d="M12 32c0-6 8-12 20-14-8 4-12 8-12 14s4 10 12 14C22 44 12 38 12 32z" fill="#b0b8c4" opacity="0.6"/>
+    <circle cx="42" cy="28" r="2" fill="#1e293b"/>
+    <path d="M18 32h20" stroke="#b0b8c4" stroke-width="0.8" opacity="0.5"/>
+  </svg>`,
+  // Bluegill — round blue-green fish with orange belly
+  1: `<svg class="fish-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M10 32c0-10 10-18 24-18 6 0 10 4 12 8l8-6v12l-8-6c-2 4-6 8-12 8C20 50 10 42 10 32z" fill="#2dd4bf"/>
+    <path d="M20 36c4 6 12 10 20 8" fill="none" stroke="#f97316" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+    <ellipse cx="18" cy="34" rx="8" ry="10" fill="#f97316" opacity="0.3"/>
+    <path d="M30 16c2-4 6-6 6-6" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round"/>
+    <path d="M30 48c2 4 6 6 6 6" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="38" cy="28" r="2.5" fill="#0f172a"/>
+    <circle cx="37" cy="27" r="0.8" fill="#fff"/>
+  </svg>`,
+  // Bass — chunky green fish with stripe
+  2: `<svg class="fish-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8 32c0-12 12-20 26-20 6 0 12 6 14 10l8-8v16l-8-8c-2 4-8 10-14 10C20 52 8 44 8 32z" fill="#22c55e"/>
+    <path d="M14 32c8-2 20-2 30 0" stroke="#166534" stroke-width="2.5" opacity="0.5"/>
+    <path d="M28 14l4-6 4 6" fill="#166534" opacity="0.6"/>
+    <path d="M28 50l4 6 4-6" fill="#166534" opacity="0.4"/>
+    <circle cx="40" cy="27" r="2.5" fill="#0f172a"/>
+    <circle cx="39" cy="26" r="0.8" fill="#fff"/>
+    <path d="M12 30c6-4 14-4 20 0" fill="#4ade80" opacity="0.3"/>
+  </svg>`,
+  // Salmon — pink-orange sleek fish
+  3: `<svg class="fish-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 32c0-10 12-18 28-18 6 0 10 4 12 8l10-8v16l-10-8c-2 4-6 8-12 8C18 50 6 42 6 32z" fill="#fb923c"/>
+    <path d="M6 32c0-6 8-12 22-14-10 4-14 8-14 14s4 10 14 14C14 44 6 38 6 32z" fill="#fdba74" opacity="0.5"/>
+    <circle cx="40" cy="27" r="2.5" fill="#431407"/>
+    <circle cx="39" cy="26" r="0.8" fill="#fff"/>
+    <path d="M16 28c4 0 8 2 12 2s8-2 12-2" stroke="#ea580c" stroke-width="1" opacity="0.4"/>
+    <path d="M16 34c4 0 8-2 12-2s8 2 12 2" stroke="#ea580c" stroke-width="1" opacity="0.4"/>
+  </svg>`,
+  // Tuna — sleek dark blue torpedo
+  4: `<svg class="fish-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 32c0-8 14-16 32-16 6 0 8 4 10 6l10-8v16l-10-8c-2 2-4 6-10 6C18 48 4 40 4 32z" fill="#3b82f6"/>
+    <path d="M4 32c0-5 10-10 24-12-12 4-16 8-16 12s4 8 16 12C14 42 4 37 4 32z" fill="#60a5fa" opacity="0.4"/>
+    <path d="M32 18l2-6 3 5" fill="#1d4ed8" opacity="0.7"/>
+    <circle cx="42" cy="28" r="2" fill="#0c1e3a"/>
+    <circle cx="41.3" cy="27.3" r="0.7" fill="#fff"/>
+    <line x1="20" y1="30" x2="34" y2="30" stroke="#93c5fd" stroke-width="0.8" opacity="0.5"/>
+    <line x1="20" y1="34" x2="34" y2="34" stroke="#93c5fd" stroke-width="0.8" opacity="0.5"/>
+  </svg>`,
+  // Swordfish — long nose
+  5: `<svg class="fish-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M2 30l18 2c4-8 10-14 18-14 6 0 8 4 10 6l8-8v16l-8-8c-2 2-4 6-10 6-8 0-14-6-18-14l-18 2z" fill="#6366f1" opacity="0.15"/>
+    <path d="M20 32c4-10 10-16 18-16 6 0 10 4 12 8l8-6v12l-8-6c-2 4-6 8-12 8-8 0-14-6-18-16z" fill="#6366f1"/>
+    <line x1="2" y1="32" x2="20" y2="32" stroke="#818cf8" stroke-width="3" stroke-linecap="round"/>
+    <path d="M34 18l3-8 2 7" fill="#4f46e5" opacity="0.7"/>
+    <circle cx="42" cy="28" r="2" fill="#1e1b4b"/>
+    <circle cx="41.3" cy="27.3" r="0.7" fill="#fff"/>
+  </svg>`,
+  // Electric Eel — wavy with sparks
+  6: `<svg class="fish-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8 32c4-8 8-4 12-8s8 4 12-4 8 8 12 0 8 8 12 4" stroke="#a855f7" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <path d="M8 32c4-8 8-4 12-8s8 4 12-4 8 8 12 0 8 8 12 4" stroke="#c084fc" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <circle cx="52" cy="30" r="2" fill="#3b0764"/>
+    <path d="M20 22l3-6 2 8-4-2z" fill="#facc15" opacity="0.9"/>
+    <path d="M36 18l2-5 2 7-3-1z" fill="#facc15" opacity="0.7"/>
+    <path d="M48 20l2-4 1 6-2-1z" fill="#facc15" opacity="0.8"/>
+  </svg>`,
+  // Lava Fish — fiery with flame fins
+  7: `<svg class="fish-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M10 32c0-10 10-18 24-18 6 0 10 4 12 8l10-8v16l-10-8c-2 4-6 8-12 8C20 50 10 42 10 32z" fill="#dc2626"/>
+    <path d="M10 32c0-6 6-12 16-14-6 4-8 8-8 14s2 10 8 14C16 44 10 38 10 32z" fill="#f97316" opacity="0.6"/>
+    <path d="M26 16c-2-6 0-10 2-12 0 4 2 6 4 8-2-6 2-10 4-12 0 4 4 8 2 14" fill="#f97316" opacity="0.8"/>
+    <path d="M28 48c-2 6 0 10 2 12 0-4 2-6 4-8-2 6 2 10 4 12 0-4 4-8 2-14" fill="#f97316" opacity="0.6"/>
+    <circle cx="40" cy="28" r="2.5" fill="#7f1d1d"/>
+    <circle cx="39" cy="27" r="0.8" fill="#fbbf24"/>
+    <path d="M16 30c4-2 10-2 16 0" fill="#fbbf24" opacity="0.3"/>
+  </svg>`,
+  // Crystal Shark — angular crystalline
+  8: `<svg class="fish-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 34l22-18 14 0 10 6 6-8v16l-6-8-10 6H28L6 46z" fill="#7dd3fc" opacity="0.4"/>
+    <path d="M6 34l22-18 14 0 10 6 6-8v16l-6-8-10 6H28L6 46z" fill="none" stroke="#7dd3fc" stroke-width="1.5"/>
+    <path d="M28 16l8 8-4 8 8-4 8 8" stroke="#bae6fd" stroke-width="1" opacity="0.6"/>
+    <polygon points="24,28 32,20 36,30 28,34" fill="#bae6fd" opacity="0.3"/>
+    <polygon points="36,24 44,22 42,32 34,30" fill="#e0f2fe" opacity="0.25"/>
+    <circle cx="44" cy="28" r="2" fill="#0c4a6e"/>
+    <circle cx="43.3" cy="27.3" r="0.7" fill="#e0f2fe"/>
+    <path d="M34 14l4-8 2 10" fill="#7dd3fc" opacity="0.6"/>
+  </svg>`,
+  // Mythic Leviathan — serpent dragon
+  9: `<svg class="fish-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 38c6-12 12-8 18-14s10 2 14-4 8 6 12 2l8 4-4 4 4 4-8 4c-4-4-8 6-12 2s-8 10-14-4S10 50 4 38z" fill="#a855f7"/>
+    <path d="M4 38c6-12 12-8 18-14" stroke="#c084fc" stroke-width="2" opacity="0.5" fill="none"/>
+    <circle cx="54" cy="30" r="3" fill="#581c87"/>
+    <circle cx="53" cy="29" r="1" fill="#f59e0b"/>
+    <path d="M58 26l4-4-2 6z" fill="#f59e0b" opacity="0.8"/>
+    <path d="M58 34l4 4-2-6z" fill="#f59e0b" opacity="0.8"/>
+    <path d="M4 38l-2-4 4 2z" fill="#a855f7"/>
+    <path d="M20 22l2-6 2 4" fill="#c084fc" opacity="0.6"/>
+    <path d="M34 20l2-6 2 4" fill="#c084fc" opacity="0.6"/>
+  </svg>`,
+  // Abyssal Kraken — tentacles
+  10: `<svg class="fish-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="32" cy="24" rx="16" ry="14" fill="#7c3aed"/>
+    <ellipse cx="32" cy="24" rx="12" ry="10" fill="#8b5cf6" opacity="0.5"/>
+    <circle cx="26" cy="22" r="3" fill="#1e1b4b"/>
+    <circle cx="38" cy="22" r="3" fill="#1e1b4b"/>
+    <circle cx="25" cy="21" r="1" fill="#fbbf24"/>
+    <circle cx="37" cy="21" r="1" fill="#fbbf24"/>
+    <path d="M20 36c-2 8-6 14-8 16" stroke="#7c3aed" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M26 38c0 8-2 14-2 18" stroke="#7c3aed" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M32 38c0 8 0 14 0 18" stroke="#7c3aed" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M38 38c0 8 2 14 2 18" stroke="#7c3aed" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M44 36c2 8 6 14 8 16" stroke="#7c3aed" stroke-width="3" stroke-linecap="round" fill="none"/>
+  </svg>`,
+  // Celestial Whale — majestic with stars
+  11: `<svg class="fish-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 32c0-12 14-20 30-20 8 0 14 6 16 10l6-4v8l-6-4c-2 4-8 10-16 10C18 52 4 44 4 32z" fill="#1e40af"/>
+    <path d="M4 34c0-4 6-10 18-14-8 4-10 8-10 14s2 8 10 12C10 44 4 38 4 34z" fill="#3b82f6" opacity="0.4"/>
+    <path d="M10 38c4 4 12 8 24 8" stroke="#60a5fa" stroke-width="1.5" opacity="0.5" fill="none"/>
+    <circle cx="44" cy="26" r="2.5" fill="#0c1e3a"/>
+    <circle cx="43" cy="25" r="0.8" fill="#bfdbfe"/>
+    <circle cx="14" cy="20" r="1.2" fill="#fbbf24" opacity="0.8"/>
+    <circle cx="22" cy="14" r="1" fill="#fbbf24" opacity="0.6"/>
+    <circle cx="8" cy="26" r="0.8" fill="#fbbf24" opacity="0.7"/>
+    <circle cx="18" cy="44" r="1" fill="#fbbf24" opacity="0.5"/>
+    <circle cx="30" cy="12" r="0.8" fill="#fbbf24" opacity="0.9"/>
+    <path d="M50 20l2-4v4h4l-4 2v4l-2-4h-4l4-2z" fill="#fbbf24" opacity="0.6"/>
+  </svg>`,
+  // Old Shoe — tattered boot
+  12: `<svg class="fish-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 44c0-4 2-20 8-24 4-2 12-2 16 0 2 4 2 12 2 16h14c4 0 6 2 6 6v4H12v-2z" fill="#78716c"/>
+    <path d="M12 44h46v2c0 2-2 4-4 4H16c-2 0-4-2-4-4v-2z" fill="#57534e"/>
+    <path d="M20 20c0 0 4 2 8 2s8-2 8-2" stroke="#a8a29e" stroke-width="1.5" fill="none"/>
+    <path d="M22 24c0 0 3 1.5 6 1.5s6-1.5 6-1.5" stroke="#a8a29e" stroke-width="1.2" fill="none"/>
+    <circle cx="28" cy="18" r="1" fill="#a8a29e" opacity="0.5"/>
+  </svg>`,
+  // Horseshoe — U-shape iron
+  13: `<svg class="fish-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M16 16c0 18 0 28 16 28s16-10 16-28" stroke="#a8a29e" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <path d="M16 16c0 18 0 28 16 28s16-10 16-28" stroke="#d6d3d1" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <circle cx="16" cy="16" r="4" fill="#a8a29e"/>
+    <circle cx="48" cy="16" r="4" fill="#a8a29e"/>
+    <circle cx="16" cy="16" r="2" fill="#d6d3d1"/>
+    <circle cx="48" cy="16" r="2" fill="#d6d3d1"/>
+  </svg>`,
+  // Dolphin — sleek blue-gray
+  14: `<svg class="fish-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8 36c4-16 16-22 28-18 4 2 8 6 10 10l8-4v8l-8-2c-2 4-6 8-12 8C20 52 6 48 8 36z" fill="#64748b"/>
+    <path d="M36 18c-2-8 2-12 6-14-2 4 0 8 2 10" fill="#64748b"/>
+    <path d="M10 36c2-8 8-14 16-16-6 4-10 8-10 14" fill="#94a3b8" opacity="0.5"/>
+    <circle cx="42" cy="30" r="2" fill="#1e293b"/>
+    <circle cx="41.3" cy="29.3" r="0.7" fill="#fff"/>
+    <path d="M46 36c2 0 4 1 5 2" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+  </svg>`,
+  // Shark — aggressive dark shark
+  15: `<svg class="fish-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 34c0-10 12-20 28-20 8 0 12 4 14 8l8-6v12l-8-6c-2 4-6 8-14 8C18 50 6 44 6 34z" fill="#475569"/>
+    <path d="M6 34c0-6 8-12 20-16-10 6-12 10-12 16s2 8 12 14C14 44 6 40 6 34z" fill="#64748b" opacity="0.4"/>
+    <path d="M30 14l6-12 2 14" fill="#475569"/>
+    <path d="M28 40l4 2-2-4 4 2-2-4 4 2-2-4" fill="#fff" stroke="#fff" stroke-width="0.5"/>
+    <circle cx="44" cy="28" r="2.5" fill="#0f172a"/>
+    <circle cx="43" cy="27" r="0.8" fill="#ef4444"/>
+  </svg>`,
+};
+
+/** Get the SVG icon HTML for a fish by ID, with optional size class */
+function fishIcon(fishId, large) {
+  const svg = FISH_ICONS[fishId];
+  if (!svg) return FISH[fishId]?.emoji || '?';
+  if (large) return svg.replace('class="fish-icon"', 'class="fish-icon fish-icon-lg"');
+  return svg;
+}
+
 /** Rod definitions — rarityBoost multiplies weights of fish index 3+ (rarer fish) */
 const RODS = [
   { id: 0, name: 'Wooden Rod',   icon: '🪵', price: 0,     rarityBoost: 1,    desc: 'A humble start' },
@@ -1030,10 +1212,10 @@ function doCast() {
       } else if (fish.value < 0) {
         // Old Shoe: lose money
         state.money = Math.max(0, state.money + fish.value);
-        showToast(`${fish.emoji} You fished up an Old Shoe! -$${Math.abs(fish.value)}`);
+        showToast(`You fished up an Old Shoe! -$${Math.abs(fish.value)}`);
       } else {
         // Horseshoe: $0
-        showToast(`${fish.emoji} You fished up a Horseshoe! Worth nothing.`);
+        showToast(`You fished up a Horseshoe! Worth nothing.`);
       }
       playCatchSound('common');
       displayCatch(fish);
@@ -1093,7 +1275,7 @@ function doSell() {
       const fish = FISH[fishId];
       breakdownHTML += `
         <div class="sale-breakdown-item">
-          <span>${fish.emoji} ${fish.name} x${count}</span>
+          <span>${fishIcon(fishId)} ${fish.name} x${count}</span>
           <span class="money-value">$${(fish.value * count).toLocaleString()}</span>
         </div>`;
     });
@@ -1138,7 +1320,7 @@ function moveToCache(invIndex) {
   if (invIndex < 0 || invIndex >= state.inventory.length) return;
   const fishId = state.inventory.splice(invIndex, 1)[0];
   state.cache.push(fishId);
-  showToast(`Cached ${FISH[fishId].emoji} ${FISH[fishId].name}`);
+  showToast(`Cached ${FISH[fishId].name}`);
   updateUI();
   saveGame();
 }
@@ -1152,7 +1334,7 @@ function moveToInventory(cacheIndex) {
   if (cacheIndex < 0 || cacheIndex >= state.cache.length) return;
   const fishId = state.cache.splice(cacheIndex, 1)[0];
   state.inventory.push(fishId);
-  showToast(`Returned ${FISH[fishId].emoji} ${FISH[fishId].name} to inventory`);
+  showToast(`Returned ${FISH[fishId].name} to inventory`);
   updateUI();
   saveGame();
 }
@@ -1189,7 +1371,7 @@ function displayCatch(fish) {
   container.innerHTML = `
     <div class="catch-result ${extraClass}">
       ${labelHTML}
-      <span class="fish-emoji">${fish.emoji}</span>
+      <span class="fish-emoji">${fishIcon(fish.id, true)}</span>
       <div class="fish-name rarity-${fish.rarity}">${fish.name}</div>
       <div class="fish-value">${valueHTML}</div>
     </div>`;
@@ -1201,7 +1383,7 @@ function showDolphinModal() {
   overlay.className = 'modal-overlay';
   overlay.innerHTML = `
     <div class="modal-box">
-      <span class="modal-emoji">🐬</span>
+      <span class="modal-emoji">${fishIcon(14, true)}</span>
       <div class="modal-title">You caught a Dolphin!</div>
       <div class="modal-text">Due to marine wildlife regulations, catching dolphins is strictly prohibited.</div>
       <div class="modal-fine">Fine: -$1,000</div>
@@ -1221,7 +1403,7 @@ function showSharkModal(eaten) {
     : `The shark found no fish to eat, but you're still fined.`;
   overlay.innerHTML = `
     <div class="modal-box">
-      <span class="modal-emoji">🦈</span>
+      <span class="modal-emoji">${fishIcon(15, true)}</span>
       <div class="modal-title">SHARK ATTACK!</div>
       <div class="modal-text">${eatenMsg}</div>
       <div class="modal-fine">Fine: -$500</div>
@@ -1264,7 +1446,7 @@ function updateUI() {
       return `
         <div class="recent-item">
           <div class="fish-info">
-            <span>${fish.emoji}</span>
+            <span>${fishIcon(fishId)}</span>
             <span class="rarity-${fish.rarity}">${fish.name}</span>
           </div>
           <span class="fish-price">$${fish.value.toLocaleString()}</span>
@@ -1279,7 +1461,7 @@ function updateUI() {
     bestEl.innerHTML = `
       <div class="best-catch">
         <span class="trophy">🏆</span>
-        <span>Best Catch: <strong class="rarity-${best.rarity}">${best.emoji} ${best.name}</strong> — $${best.value.toLocaleString()}</span>
+        <span>Best Catch: ${fishIcon(state.bestCatchId)} <strong class="rarity-${best.rarity}">${best.name}</strong> — $${best.value.toLocaleString()}</span>
       </div>`;
   }
 
@@ -1321,7 +1503,7 @@ function updateTraderInventory() {
       const fish = FISH[fishId];
       return `
         <div class="inv-row">
-          <span>${fish.emoji} <span class="rarity-${fish.rarity}">${fish.name}</span> <span class="count">x${count}</span></span>
+          <span>${fishIcon(fishId)} <span class="rarity-${fish.rarity}">${fish.name}</span> <span class="count">x${count}</span></span>
           <span class="total-val">$${(fish.value * count).toLocaleString()}</span>
         </div>`;
     }).join('');
@@ -1386,7 +1568,7 @@ function updateCache() {
       html += `
         <div class="cache-fish-item">
           <div class="fish-info">
-            <span>${fish.emoji}</span>
+            <span>${fishIcon(fishId)}</span>
             <span class="rarity-${fish.rarity}">${fish.name}</span>
             <span class="fish-price">$${fish.value.toLocaleString()}</span>
           </div>
@@ -1419,7 +1601,7 @@ function updateCache() {
         html += `
           <div class="cache-fish-item">
             <div class="fish-info">
-              <span>${fish.emoji}</span>
+              <span>${fishIcon(fishId)}</span>
               <span class="rarity-${fish.rarity}">${fish.name}</span>
               <span class="count" style="color: var(--text-dim); font-weight: 600;">x${indices.length}</span>
               <span class="fish-price">$${fish.value.toLocaleString()}</span>
