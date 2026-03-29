@@ -27,6 +27,7 @@
   --rare: #60a5fa;
   --epic: #c084fc;
   --legendary: #fbbf24;
+  --mythical: #ff3d8f;
   --junk: #ef4444;
 }
 
@@ -258,6 +259,7 @@ body::before {
 .rarity-rare { color: var(--rare); }
 .rarity-epic { color: var(--epic); }
 .rarity-legendary { color: var(--legendary); }
+.rarity-mythical { color: var(--mythical); }
 .rarity-junk { color: var(--junk); }
 
 /* Legendary glow effect */
@@ -271,6 +273,16 @@ body::before {
 
 .catch-result.legendary-catch .fish-emoji {
   filter: drop-shadow(0 0 16px var(--legendary));
+  animation: floatBob 2s ease-in-out infinite;
+}
+
+/* Mythical glow effect */
+.catch-result.mythical-catch {
+  animation: catchPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), mythicalGlow 1.5s ease infinite;
+}
+
+.catch-result.mythical-catch .fish-emoji {
+  filter: drop-shadow(0 0 20px var(--mythical)) drop-shadow(0 0 40px rgba(255, 61, 143, 0.4));
   animation: floatBob 2s ease-in-out infinite;
 }
 
@@ -687,6 +699,11 @@ body::before {
   50% { filter: drop-shadow(0 0 24px var(--legendary)) drop-shadow(0 0 48px rgba(251,191,36,0.3)); }
 }
 
+@keyframes mythicalGlow {
+  0%, 100% { filter: drop-shadow(0 0 10px var(--mythical)); }
+  50% { filter: drop-shadow(0 0 30px var(--mythical)) drop-shadow(0 0 60px rgba(255,61,143,0.4)); }
+}
+
 @keyframes floatBob {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-6px); }
@@ -848,9 +865,9 @@ const FISH = [
   { id: 9,  name: 'Mythic Leviathan',  emoji: '🐉', value: 5000,  rarity: 'legendary', weight: 0.5  },
   { id: 10, name: 'Abyssal Kraken',    emoji: '🦑', value: 35000, rarity: 'legendary', weight: 0.1  },
   { id: 11, name: 'Celestial Whale',   emoji: '🐋', value: 50000,   rarity: 'legendary', weight: 0.03  },
-  { id: 16, name: 'Void Serpent',      emoji: '🐍', value: 100000,  rarity: 'legendary', weight: 0.008 },
-  { id: 17, name: 'Phantom Anglerfish', emoji: '🔮', value: 250000, rarity: 'legendary', weight: 0.003 },
-  { id: 18, name: 'God Fish',          emoji: '👁️', value: 1000000, rarity: 'legendary', weight: 0.001 },
+  { id: 16, name: 'Void Serpent',      emoji: '🐍', value: 100000,  rarity: 'mythical', weight: 0.008 },
+  { id: 17, name: 'Phantom Anglerfish', emoji: '🔮', value: 250000, rarity: 'mythical', weight: 0.003 },
+  { id: 18, name: 'God Fish',          emoji: '👁️', value: 1000000, rarity: 'mythical', weight: 0.001 },
   // Junk / special catches — not added to inventory
   { id: 12, name: 'Old Shoe',          emoji: '👟', value: -50,   rarity: 'junk', weight: 40, junk: true },
   { id: 13, name: 'Horseshoe',         emoji: '🧲', value: 0,     rarity: 'junk', weight: 60, junk: true },
@@ -1141,15 +1158,21 @@ function playCatchSound(rarity) {
     osc.connect(gain);
     gain.connect(ctx.destination);
 
-    const pitchMap = { common: 440, uncommon: 523, rare: 659, epic: 784, legendary: 988 };
-    const durationMap = { common: 0.1, uncommon: 0.12, rare: 0.15, epic: 0.2, legendary: 0.35 };
+    const pitchMap = { common: 440, uncommon: 523, rare: 659, epic: 784, legendary: 988, mythical: 1175 };
+    const durationMap = { common: 0.1, uncommon: 0.12, rare: 0.15, epic: 0.2, legendary: 0.35, mythical: 0.5 };
     const freq = pitchMap[rarity] || 440;
     const dur = durationMap[rarity] || 0.1;
 
-    osc.type = rarity === 'legendary' ? 'sine' : rarity === 'epic' ? 'triangle' : 'sine';
+    osc.type = rarity === 'mythical' ? 'sine' : rarity === 'legendary' ? 'sine' : rarity === 'epic' ? 'triangle' : 'sine';
     osc.frequency.setValueAtTime(freq, ctx.currentTime);
 
-    if (rarity === 'legendary') {
+    if (rarity === 'mythical') {
+      // Ascending arpeggio for mythical
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      osc.frequency.setValueAtTime(freq * 1.2, ctx.currentTime + 0.1);
+      osc.frequency.setValueAtTime(freq * 1.4, ctx.currentTime + 0.2);
+      osc.frequency.setValueAtTime(freq * 1.6, ctx.currentTime + 0.3);
+    } else if (rarity === 'legendary') {
       // Ascending arpeggio for legendary
       osc.frequency.setValueAtTime(freq, ctx.currentTime);
       osc.frequency.setValueAtTime(freq * 1.25, ctx.currentTime + 0.1);
@@ -1254,7 +1277,7 @@ function doCast() {
       if (fish.shark) {
         // Shark: eats all non-legendary fish from inventory, $500 fine
         const before = state.inventory.length;
-        state.inventory = state.inventory.filter(id => FISH[id].rarity === 'legendary');
+        state.inventory = state.inventory.filter(id => FISH[id].rarity === 'legendary' || FISH[id].rarity === 'mythical');
         const eaten = before - state.inventory.length;
         state.money = Math.max(0, state.money - 500);
         showSharkModal(eaten);
@@ -1400,11 +1423,14 @@ function displayCatch(fish) {
   const container = document.getElementById('catch-display');
   const isEpic = fish.rarity === 'epic';
   const isLegendary = fish.rarity === 'legendary';
+  const isMythical = fish.rarity === 'mythical';
   const isJunk = fish.rarity === 'junk';
-  const extraClass = isLegendary ? 'legendary-catch' : isEpic ? 'epic-catch' : isJunk ? 'shake' : '';
+  const extraClass = isMythical ? 'mythical-catch' : isLegendary ? 'legendary-catch' : isEpic ? 'epic-catch' : isJunk ? 'shake' : '';
 
   let labelHTML = '';
-  if (isEpic || isLegendary) {
+  if (isMythical) {
+    labelHTML = `<div class="rare-label rarity-mythical">🌌 MYTHICAL CATCH!</div>`;
+  } else if (isEpic || isLegendary) {
     const prefix = isLegendary ? '✨ LEGENDARY CATCH!' : '⚡ EPIC CATCH!';
     labelHTML = `<div class="rare-label rarity-${fish.rarity}">${prefix}</div>`;
   } else if (isJunk) {
