@@ -845,6 +845,7 @@ const FISH = [
   { id: 12, name: 'Old Shoe',          emoji: '👟', value: -50,   rarity: 'junk', weight: 40, junk: true },
   { id: 13, name: 'Horseshoe',         emoji: '🧲', value: 0,     rarity: 'junk', weight: 60, junk: true },
   { id: 14, name: 'Dolphin',           emoji: '🐬', value: -1000, rarity: 'junk', weight: 3,  junk: true, dolphin: true },
+  { id: 15, name: 'Shark',             emoji: '🦈', value: -500,  rarity: 'junk', weight: 1,  junk: true, shark: true },
 ];
 
 /** Rod definitions — rarityBoost multiplies weights of fish index 3+ (rarer fish) */
@@ -961,8 +962,8 @@ function getAdjustedWeights() {
   const rod = RODS[state.equippedRod];
   const netWorth = getNetWorth();
   return FISH.map((fish, i) => {
-    // Dolphin requires net worth >= 1000
-    if (fish.dolphin && netWorth < 1000) return 0;
+    // Dolphin and Shark require net worth >= 1000
+    if ((fish.dolphin || fish.shark) && netWorth < 1000) return 0;
     // Junk items are not boosted by rods
     if (fish.junk) return fish.weight;
     if (i >= 3) return fish.weight * rod.rarityBoost;
@@ -1015,7 +1016,14 @@ function doCast() {
 
     if (fish.junk) {
       // Junk items: don't add to inventory, apply money effect immediately
-      if (fish.dolphin) {
+      if (fish.shark) {
+        // Shark: eats all non-legendary fish from inventory, $500 fine
+        const before = state.inventory.length;
+        state.inventory = state.inventory.filter(id => FISH[id].rarity === 'legendary');
+        const eaten = before - state.inventory.length;
+        state.money = Math.max(0, state.money - 500);
+        showSharkModal(eaten);
+      } else if (fish.dolphin) {
         // Dolphin: show fine modal
         state.money = Math.max(0, state.money - 1000);
         showDolphinModal();
@@ -1201,6 +1209,27 @@ function showDolphinModal() {
     </div>`;
   document.body.appendChild(overlay);
   document.getElementById('modal-dismiss-btn').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+}
+
+/** Show the shark attack modal */
+function showSharkModal(eaten) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  const eatenMsg = eaten > 0
+    ? `The shark devoured <strong>${eaten} fish</strong> from your inventory! Only legendary fish survived.`
+    : `The shark found no fish to eat, but you're still fined.`;
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <span class="modal-emoji">🦈</span>
+      <div class="modal-title">SHARK ATTACK!</div>
+      <div class="modal-text">${eatenMsg}</div>
+      <div class="modal-fine">Fine: -$500</div>
+      <div style="color: var(--text-dim); font-size: 0.78rem; margin-bottom: 16px;">Due to regulations, harboring a shark carries a penalty.</div>
+      <button class="modal-btn" id="shark-dismiss-btn">Accept Losses</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById('shark-dismiss-btn').addEventListener('click', () => overlay.remove());
   overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
 }
 
