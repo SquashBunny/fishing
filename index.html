@@ -1799,9 +1799,9 @@ function getAdjustedWeights() {
   const rod = RODS[state.equippedRod];
   const netWorth = getNetWorth();
   const luck = getTotalLuck();
-  // Luck multiplies the rod's boost so bait is always impactful, even with top rods.
-  // +10 luck = 2x, +20 luck = 3x, +32 (max bait + GM passive) ≈ 4.2x on rare fish.
-  const luckMultiplier = rod.rarityBoost * (1 + luck * 0.1);
+  // Luck multiplies the rod's boost, but rods are the main source of power.
+  // +1 luck = +7.5%, +3 = +22.5%, +10 = +75% (1.75x), +20 (Master Bait) = 2.5x.
+  const luckMultiplier = rod.rarityBoost * (1 + luck * 0.075);
   return FISH.map((fish, i) => {
     // Dolphin and Shark require net worth >= 1000
     if ((fish.dolphin || fish.shark) && netWorth < 1000) return 0;
