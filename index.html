@@ -124,6 +124,7 @@ body::before {
 .rod-value { color: var(--accent); }
 .inv-value { color: var(--text); }
 .inv-full { color: var(--danger); animation: pulse 1s ease infinite; }
+.luck-value { color: var(--warning); text-shadow: 0 0 8px rgba(243, 156, 18, 0.4); }
 
 /* ========== TAB NAVIGATION ========== */
 .tab-nav {
@@ -1086,6 +1087,12 @@ body::before {
       <div>
         <div class="label">Rank</div>
         <div class="value rank-value" id="rank-display">Bronze 1</div>
+      </div>
+    </div>
+    <div class="status-item">
+      <div>
+        <div class="label">Luck</div>
+        <div class="value luck-value" id="luck-display">+0</div>
       </div>
     </div>
   </div>
@@ -2465,6 +2472,11 @@ function updateRankDisplay() {
   el.textContent = rankString(state.rank);
   el.style.color = stage.color;
   el.classList.toggle('grandmaster-glow', state.rank.stage === MAX_STAGE);
+
+  // Luck display in status bar
+  const luckEl = document.getElementById('luck-display');
+  const luck = getTotalLuck();
+  luckEl.textContent = `+${luck}`;
 }
 
 function updateRankProgress() {
