@@ -1525,7 +1525,9 @@ function getAdjustedWeights() {
   const rod = RODS[state.equippedRod];
   const netWorth = getNetWorth();
   const luck = getTotalLuck();
-  const luckMultiplier = rod.rarityBoost + luck * 0.05;
+  // Luck multiplies the rod's boost so bait is always impactful, even with top rods.
+  // +10 luck = 2x, +20 luck = 3x, +32 (max bait + GM passive) ≈ 4.2x on rare fish.
+  const luckMultiplier = rod.rarityBoost * (1 + luck * 0.1);
   return FISH.map((fish, i) => {
     // Dolphin and Shark require net worth >= 1000
     if ((fish.dolphin || fish.shark) && netWorth < 1000) return 0;
