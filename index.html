@@ -1123,6 +1123,14 @@ const FISH = [
 ];
 
 /**
+ * Lookup fish by their .id field (not array index).
+ * Needed because fish ids are not always equal to array indices —
+ * the mythical fish (16/17/18) were inserted before the junk fish in the array.
+ */
+const FISH_BY_ID = {};
+FISH.forEach(f => { FISH_BY_ID[f.id] = f; });
+
+/**
  * Custom SVG icons for each fish/item.
  * Each is a complete <svg> string rendered inline.
  */
@@ -1342,7 +1350,7 @@ const FISH_ICONS = {
 /** Get the SVG icon HTML for a fish by ID, with optional size class */
 function fishIcon(fishId, large) {
   const svg = FISH_ICONS[fishId];
-  if (!svg) return FISH[fishId]?.emoji || '?';
+  if (!svg) return FISH_BY_ID[fishId]?.emoji || '?';
   if (large) return svg.replace('class="fish-icon"', 'class="fish-icon fish-icon-lg"');
   return svg;
 }
@@ -1530,8 +1538,8 @@ function getAdjustedWeights() {
 
 /** Calculate player's net worth (money + inventory value + cache value) */
 function getNetWorth() {
-  const invValue = state.inventory.reduce((sum, id) => sum + FISH[id].value, 0);
-  const cacheValue = state.cache.reduce((sum, id) => sum + FISH[id].value, 0);
+  const invValue = state.inventory.reduce((sum, id) => sum + FISH_BY_ID[id].value, 0);
+  const cacheValue = state.cache.reduce((sum, id) => sum + FISH_BY_ID[id].value, 0);
   return state.money + invValue + cacheValue;
 }
 
@@ -1725,7 +1733,7 @@ function doCast() {
       if (fish.shark) {
         // Shark: eats all non-legendary fish from inventory, $500 fine
         const before = state.inventory.length;
-        state.inventory = state.inventory.filter(id => FISH[id].rarity === 'legendary' || FISH[id].rarity === 'mythical');
+        state.inventory = state.inventory.filter(id => FISH_BY_ID[id].rarity === 'legendary' || FISH_BY_ID[id].rarity === 'mythical');
         const eaten = before - state.inventory.length;
         state.money = Math.max(0, state.money - 500);
         showSharkModal(eaten);
@@ -1748,7 +1756,7 @@ function doCast() {
       state.inventory.push(fish.id);
 
       // Track best catch
-      if (state.bestCatchId === -1 || fish.id > state.bestCatchId) {
+      if (state.bestCatchId === -1 || fish.value > FISH_BY_ID[state.bestCatchId].value) {
         state.bestCatchId = fish.id;
       }
 
@@ -1782,7 +1790,7 @@ function doSell() {
   let totalEarnings = 0;
 
   state.inventory.forEach(fishId => {
-    const fish = FISH[fishId];
+    const fish = FISH_BY_ID[fishId];
     counts[fishId] = (counts[fishId] || 0) + 1;
     totalEarnings += fish.value;
   });
@@ -1799,7 +1807,7 @@ function doSell() {
   Object.entries(counts)
     .sort((a, b) => Number(b[0]) - Number(a[0]))
     .forEach(([fishId, count]) => {
-      const fish = FISH[fishId];
+      const fish = FISH_BY_ID[fishId];
       breakdownHTML += `
         <div class="sale-breakdown-item">
           <span>${fishIcon(fishId)} ${fish.name} x${count}</span>
@@ -1847,7 +1855,7 @@ function moveToCache(invIndex) {
   if (invIndex < 0 || invIndex >= state.inventory.length) return;
   const fishId = state.inventory.splice(invIndex, 1)[0];
   state.cache.push(fishId);
-  showToast(`Cached ${FISH[fishId].name}`);
+  showToast(`Cached ${FISH_BY_ID[fishId].name}`);
   updateUI();
   saveGame();
 }
@@ -1861,7 +1869,7 @@ function moveToInventory(cacheIndex) {
   if (cacheIndex < 0 || cacheIndex >= state.cache.length) return;
   const fishId = state.cache.splice(cacheIndex, 1)[0];
   state.inventory.push(fishId);
-  showToast(`Returned ${FISH[fishId].name} to inventory`);
+  showToast(`Returned ${FISH_BY_ID[fishId].name} to inventory`);
   updateUI();
   saveGame();
 }
@@ -1972,7 +1980,7 @@ function updateUI() {
     recentEl.innerHTML = '<div style="color: var(--text-dim); font-size: 0.85rem; text-align: center; padding: 12px;">No catches yet</div>';
   } else {
     recentEl.innerHTML = state.recentCatches.map(fishId => {
-      const fish = FISH[fishId];
+      const fish = FISH_BY_ID[fishId];
       return `
         <div class="recent-item">
           <div class="fish-info">
@@ -1987,7 +1995,7 @@ function updateUI() {
   // Best catch
   const bestEl = document.getElementById('best-catch-display');
   if (state.bestCatchId >= 0) {
-    const best = FISH[state.bestCatchId];
+    const best = FISH_BY_ID[state.bestCatchId];
     bestEl.innerHTML = `
       <div class="best-catch">
         <span class="trophy">🏆</span>
@@ -2034,12 +2042,12 @@ function updateTraderInventory() {
     counts[fishId] = (counts[fishId] || 0) + 1;
   });
 
-  const totalValue = state.inventory.reduce((sum, id) => sum + FISH[id].value, 0);
+  const totalValue = state.inventory.reduce((sum, id) => sum + FISH_BY_ID[id].value, 0);
 
   let html = Object.entries(counts)
     .sort((a, b) => Number(b[0]) - Number(a[0]))
     .map(([fishId, count]) => {
-      const fish = FISH[fishId];
+      const fish = FISH_BY_ID[fishId];
       return `
         <div class="inv-row">
           <span>${fishIcon(fishId)} <span class="rarity-${fish.rarity}">${fish.name}</span> <span class="count">x${count}</span></span>
@@ -2102,7 +2110,7 @@ function updateCache() {
   } else {
     html += '<div class="cache-fish-list">';
     state.cache.forEach((fishId, idx) => {
-      const fish = FISH[fishId];
+      const fish = FISH_BY_ID[fishId];
       const invFull = state.inventory.length >= MAX_INVENTORY;
       html += `
         <div class="cache-fish-item">
@@ -2134,7 +2142,7 @@ function updateCache() {
     Object.entries(grouped)
       .sort((a, b) => Number(b[0]) - Number(a[0]))
       .forEach(([fishId, indices]) => {
-        const fish = FISH[fishId];
+        const fish = FISH_BY_ID[fishId];
         // Show one row per fish type, button caches the last one of that type
         const lastIdx = indices[indices.length - 1];
         html += `
