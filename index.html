@@ -27,6 +27,9 @@
   --rare: #60a5fa;
   --epic: #c084fc;
   --legendary: #fbbf24;
+  --mythic: #ef4444;
+  --ancient: #22d3ee;
+  --godlike: #f472b6;
   --mythical: #ff3d8f;
   --junk: #ef4444;
 }
@@ -260,6 +263,17 @@ body::before {
 .rarity-epic { color: var(--epic); }
 .rarity-legendary { color: var(--legendary); }
 .rarity-mythical { color: var(--mythical); }
+.rarity-mythic { color: var(--mythic); }
+.rarity-ancient { color: var(--ancient); }
+.rarity-godlike {
+  background: linear-gradient(90deg, #ef4444, #fbbf24, #22d3ee, #a855f7, #ef4444);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: godlikeRainbow 3s linear infinite;
+  font-weight: 700;
+}
 .rarity-junk { color: var(--junk); }
 
 /* Legendary glow effect */
@@ -284,6 +298,47 @@ body::before {
 .catch-result.mythical-catch .fish-emoji {
   filter: drop-shadow(0 0 20px var(--mythical)) drop-shadow(0 0 40px rgba(255, 61, 143, 0.4));
   animation: floatBob 2s ease-in-out infinite;
+}
+
+/* Mythic (crimson) */
+.catch-result.mythic-catch {
+  animation: catchPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), mythicGlow 1.5s ease infinite;
+}
+.catch-result.mythic-catch .fish-emoji {
+  filter: drop-shadow(0 0 18px var(--mythic)) drop-shadow(0 0 36px rgba(239, 68, 68, 0.4));
+  animation: floatBob 2s ease-in-out infinite;
+}
+
+/* Ancient (cyan) */
+.catch-result.ancient-catch {
+  animation: catchPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), ancientGlow 1.5s ease infinite;
+}
+.catch-result.ancient-catch .fish-emoji {
+  filter: drop-shadow(0 0 20px var(--ancient)) drop-shadow(0 0 40px rgba(34, 211, 238, 0.5));
+  animation: floatBob 2s ease-in-out infinite;
+}
+
+/* Godlike (rainbow) */
+.catch-result.godlike-catch {
+  animation: catchPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+}
+.catch-result.godlike-catch::before {
+  content: '';
+  position: absolute;
+  inset: -30px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(251,191,36,0.3), transparent 70%);
+  animation: godlikePulse 2s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+.catch-result.godlike-catch .fish-emoji {
+  filter:
+    drop-shadow(0 0 14px #fbbf24)
+    drop-shadow(0 0 28px #ef4444)
+    drop-shadow(0 0 42px #a855f7);
+  animation: floatBob 2.5s ease-in-out infinite, godlikeHue 3s linear infinite;
 }
 
 /* Best catch */
@@ -927,6 +982,33 @@ body::before {
   50% { filter: drop-shadow(0 0 30px var(--mythical)) drop-shadow(0 0 60px rgba(255,61,143,0.4)); }
 }
 
+@keyframes mythicGlow {
+  0%, 100% { filter: drop-shadow(0 0 8px var(--mythic)); }
+  50% { filter: drop-shadow(0 0 26px var(--mythic)) drop-shadow(0 0 52px rgba(239,68,68,0.4)); }
+}
+
+@keyframes ancientGlow {
+  0%, 100% { filter: drop-shadow(0 0 10px var(--ancient)); }
+  50% { filter: drop-shadow(0 0 28px var(--ancient)) drop-shadow(0 0 56px rgba(34,211,238,0.45)); }
+}
+
+@keyframes godlikeRainbow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+@keyframes godlikeHue {
+  0%, 100% { filter: drop-shadow(0 0 14px #fbbf24) drop-shadow(0 0 28px #ef4444) drop-shadow(0 0 42px #a855f7); }
+  25%      { filter: drop-shadow(0 0 14px #22d3ee) drop-shadow(0 0 28px #fbbf24) drop-shadow(0 0 42px #ef4444); }
+  50%      { filter: drop-shadow(0 0 14px #a855f7) drop-shadow(0 0 28px #22d3ee) drop-shadow(0 0 42px #fbbf24); }
+  75%      { filter: drop-shadow(0 0 14px #ef4444) drop-shadow(0 0 28px #a855f7) drop-shadow(0 0 42px #22d3ee); }
+}
+
+@keyframes godlikePulse {
+  0%, 100% { transform: scale(0.9); opacity: 0.6; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+
 @keyframes floatBob {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-6px); }
@@ -1115,6 +1197,18 @@ const FISH = [
   { id: 16, name: 'Void Serpent',      emoji: '🐍', value: 100000,  rarity: 'mythical', weight: 0.008 },
   { id: 17, name: 'Phantom Anglerfish', emoji: '🔮', value: 250000, rarity: 'mythical', weight: 0.003 },
   { id: 18, name: 'God Fish',          emoji: '👁️', value: 1000000, rarity: 'mythical', weight: 0.001 },
+  // Expanded legendary tier
+  { id: 19, name: 'Sunken King Crab',  emoji: '🦀', value: 7500,   rarity: 'legendary', weight: 1.5   },
+  { id: 20, name: 'Golden Whale',      emoji: '🐳', value: 10000,  rarity: 'legendary', weight: 1.0   },
+  // Mythic tier — crimson glow, extremely rare
+  { id: 21, name: 'Tide Serpent',      emoji: '🌊', value: 25000,  rarity: 'mythic',    weight: 0.08  },
+  { id: 22, name: 'Nebula Ray',        emoji: '✴️', value: 30000,  rarity: 'mythic',    weight: 0.05  },
+  // Ancient tier — cyan glow, ultra rare
+  { id: 23, name: 'Time-Warp Turtle',  emoji: '⏳', value: 50000,  rarity: 'ancient',   weight: 0.02  },
+  { id: 24, name: 'Fossil Leviathan',  emoji: '🦴', value: 75000,  rarity: 'ancient',   weight: 0.008 },
+  // Godlike tier — rainbow glow, nearly impossible
+  { id: 25, name: 'Celestial Koi',     emoji: '🎏', value: 150000, rarity: 'godlike',   weight: 0.003 },
+  { id: 26, name: 'Abyssal Titan',     emoji: '🌀', value: 300000, rarity: 'godlike',   weight: 0.0008},
   // Junk / special catches — not added to inventory
   { id: 12, name: 'Old Shoe',          emoji: '👟', value: -50,   rarity: 'junk', weight: 40, junk: true },
   { id: 13, name: 'Horseshoe',         emoji: '🧲', value: 0,     rarity: 'junk', weight: 60, junk: true },
@@ -1345,6 +1439,155 @@ const FISH_ICONS = {
     <circle cx="50" cy="40" r="0.8" fill="#fbbf24" opacity="0.4"/>
     <circle cx="14" cy="42" r="0.8" fill="#fbbf24" opacity="0.3"/>
   </svg>`,
+  // Sunken King Crab — golden armored crab with glinting shell
+  19: `<svg class="fish-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="32" cy="36" rx="20" ry="14" fill="#d97706"/>
+    <ellipse cx="32" cy="34" rx="16" ry="10" fill="#fbbf24" opacity="0.5"/>
+    <circle cx="24" cy="28" r="2.5" fill="#0f172a"/>
+    <circle cx="40" cy="28" r="2.5" fill="#0f172a"/>
+    <circle cx="23.5" cy="27.5" r="0.8" fill="#fff"/>
+    <circle cx="39.5" cy="27.5" r="0.8" fill="#fff"/>
+    <path d="M12 36c-4-2-8 2-6 6" stroke="#d97706" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M52 36c4-2 8 2 6 6" stroke="#d97706" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M18 46c-2 4-6 6-4 10" stroke="#d97706" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <path d="M46 46c2 4 6 6 4 10" stroke="#d97706" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <path d="M26 48c-1 4-3 6-2 10" stroke="#d97706" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <path d="M38 48c1 4 3 6 2 10" stroke="#d97706" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <path d="M6 30l6-4-2 6z" fill="#d97706"/>
+    <path d="M58 30l-6-4 2 6z" fill="#d97706"/>
+    <circle cx="32" cy="34" r="1.5" fill="#fff" opacity="0.7"/>
+  </svg>`,
+  // Golden Whale — massive gold whale with shining streaks
+  20: `<svg class="fish-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 34c0-12 14-22 32-22 8 0 14 6 16 10l8-4v12l-8-4c-2 4-8 12-16 12C18 54 4 46 4 34z" fill="#ca8a04"/>
+    <path d="M4 34c0-6 10-14 22-18-10 6-14 12-14 18s4 12 14 18C14 48 4 40 4 34z" fill="#fbbf24" opacity="0.5"/>
+    <path d="M12 40c6 4 14 8 28 8" stroke="#fde047" stroke-width="2" opacity="0.7" fill="none"/>
+    <path d="M20 28c4-2 10-2 14 0" stroke="#fde047" stroke-width="1.5" opacity="0.6" fill="none"/>
+    <circle cx="44" cy="28" r="2.5" fill="#1c1917"/>
+    <circle cx="43" cy="27" r="0.8" fill="#fff"/>
+    <path d="M54 32c3-2 6 0 5 4" stroke="#ca8a04" stroke-width="2" fill="none"/>
+    <circle cx="28" cy="22" r="1" fill="#fde047"/>
+    <circle cx="18" cy="34" r="0.8" fill="#fde047"/>
+    <circle cx="34" cy="44" r="0.8" fill="#fde047"/>
+  </svg>`,
+  // Tide Serpent — crimson sea serpent with glowing eye
+  21: `<svg class="fish-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 40c4-10 10-6 16-12s10 6 14-4 8 10 14 6l10 2-4 4 4 4-10 2c-6-4-10 8-14-2s-8 10-14 4S8 52 4 40z" fill="#991b1b"/>
+    <path d="M4 40c4-10 10-6 16-12" stroke="#ef4444" stroke-width="2" opacity="0.6" fill="none"/>
+    <path d="M14 34c2-2 6-4 10-2" stroke="#ef4444" stroke-width="1.5" opacity="0.5" fill="none"/>
+    <circle cx="54" cy="32" r="3" fill="#450a0a"/>
+    <circle cx="53" cy="31" r="1.2" fill="#fbbf24"/>
+    <circle cx="53.5" cy="31.5" r="0.5" fill="#fff"/>
+    <path d="M58 28l4-4-2 6z" fill="#fbbf24" opacity="0.8"/>
+    <path d="M58 36l4 4-2-6z" fill="#fbbf24" opacity="0.8"/>
+    <path d="M20 26l2-5 2 4" fill="#ef4444" opacity="0.7"/>
+    <path d="M34 22l2-5 2 4" fill="#ef4444" opacity="0.7"/>
+    <circle cx="12" cy="44" r="1.2" fill="#ef4444" opacity="0.5"/>
+    <circle cx="28" cy="42" r="1" fill="#ef4444" opacity="0.4"/>
+  </svg>`,
+  // Nebula Ray — stingray with starfield pattern
+  22: `<svg class="fish-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M32 10c-18 0-28 14-28 24 0 6 6 10 14 10 4 0 8-2 14-2s10 2 14 2c8 0 14-4 14-10 0-10-10-24-28-24z" fill="#7c2d12"/>
+    <path d="M32 12c-14 0-24 12-24 22 0 4 4 8 10 8" fill="#991b1b" opacity="0.6"/>
+    <circle cx="26" cy="24" r="2" fill="#fbbf24"/>
+    <circle cx="38" cy="24" r="2" fill="#fbbf24"/>
+    <circle cx="25" cy="23" r="0.6" fill="#fff"/>
+    <circle cx="37" cy="23" r="0.6" fill="#fff"/>
+    <circle cx="16" cy="30" r="1.2" fill="#fde047"/>
+    <circle cx="48" cy="30" r="1.2" fill="#fde047"/>
+    <circle cx="20" cy="38" r="0.9" fill="#fde047" opacity="0.8"/>
+    <circle cx="44" cy="38" r="0.9" fill="#fde047" opacity="0.8"/>
+    <circle cx="32" cy="36" r="1" fill="#fde047"/>
+    <circle cx="12" cy="24" r="0.7" fill="#fde047" opacity="0.6"/>
+    <circle cx="52" cy="24" r="0.7" fill="#fde047" opacity="0.6"/>
+    <circle cx="28" cy="44" r="0.8" fill="#fde047" opacity="0.7"/>
+    <circle cx="36" cy="44" r="0.8" fill="#fde047" opacity="0.7"/>
+    <path d="M32 44c0 6 -4 12 -6 16" stroke="#7c2d12" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <path d="M32 44c0 6 4 12 6 16" stroke="#7c2d12" stroke-width="2" stroke-linecap="round" fill="none"/>
+  </svg>`,
+  // Time-Warp Turtle — cyan turtle with clock shell
+  23: `<svg class="fish-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="32" cy="34" rx="20" ry="15" fill="#0891b2"/>
+    <ellipse cx="32" cy="34" rx="16" ry="12" fill="#22d3ee" opacity="0.5"/>
+    <circle cx="32" cy="34" r="10" fill="none" stroke="#a5f3fc" stroke-width="1.5"/>
+    <line x1="32" y1="24" x2="32" y2="28" stroke="#a5f3fc" stroke-width="1.2"/>
+    <line x1="42" y1="34" x2="38" y2="34" stroke="#a5f3fc" stroke-width="1.2"/>
+    <line x1="32" y1="44" x2="32" y2="40" stroke="#a5f3fc" stroke-width="1.2"/>
+    <line x1="22" y1="34" x2="26" y2="34" stroke="#a5f3fc" stroke-width="1.2"/>
+    <line x1="32" y1="34" x2="32" y2="28" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="32" y1="34" x2="37" y2="34" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="32" cy="34" r="1" fill="#fff"/>
+    <path d="M12 28c-4-2-8 0-6 6" stroke="#0891b2" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <path d="M52 28c4-2 8 0 6 6" stroke="#0891b2" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <path d="M16 44c-2 4-2 8 0 10" stroke="#0891b2" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <path d="M48 44c2 4 2 8 0 10" stroke="#0891b2" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <ellipse cx="10" cy="30" rx="4" ry="3" fill="#0891b2"/>
+    <circle cx="8" cy="29" r="0.8" fill="#fff"/>
+  </svg>`,
+  // Fossil Leviathan — skeletal ancient beast
+  24: `<svg class="fish-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 34c0-10 12-18 26-18 8 0 14 6 16 10l10-6v12l-10-6c-2 4-8 10-16 10C18 52 6 44 6 34z" fill="#164e63"/>
+    <path d="M6 34c0-10 12-18 26-18 8 0 14 6 16 10l10-6v12l-10-6c-2 4-8 10-16 10C18 52 6 44 6 34z" fill="none" stroke="#67e8f9" stroke-width="1.5"/>
+    <line x1="16" y1="30" x2="16" y2="40" stroke="#cffafe" stroke-width="1.5"/>
+    <line x1="22" y1="26" x2="22" y2="42" stroke="#cffafe" stroke-width="1.5"/>
+    <line x1="28" y1="24" x2="28" y2="44" stroke="#cffafe" stroke-width="1.5"/>
+    <line x1="34" y1="24" x2="34" y2="44" stroke="#cffafe" stroke-width="1.5"/>
+    <line x1="40" y1="26" x2="40" y2="42" stroke="#cffafe" stroke-width="1.5"/>
+    <line x1="46" y1="28" x2="46" y2="40" stroke="#cffafe" stroke-width="1.5"/>
+    <circle cx="48" cy="28" r="2.5" fill="#cffafe"/>
+    <circle cx="48" cy="28" r="1.3" fill="#0c4a6e"/>
+    <path d="M50 34l4 2-2-4 4 2-2-4" fill="#cffafe" stroke="#cffafe" stroke-width="0.5"/>
+    <path d="M12 32c0-4 4-8 8-10" stroke="#67e8f9" stroke-width="1" opacity="0.6" fill="none"/>
+  </svg>`,
+  // Celestial Koi — iridescent koi with radiant scales
+  25: `<svg class="fish-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="koiGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#fbbf24"/>
+        <stop offset="50%" stop-color="#f472b6"/>
+        <stop offset="100%" stop-color="#a855f7"/>
+      </linearGradient>
+    </defs>
+    <path d="M6 32c0-10 12-18 26-18 8 0 12 6 14 10l10-6v12l-10-6c-2 4-6 8-14 8C18 50 6 42 6 32z" fill="url(#koiGrad)"/>
+    <path d="M6 32c0-6 8-12 18-14-8 4-10 8-10 14s2 10 10 14C14 44 6 38 6 32z" fill="#fff" opacity="0.3"/>
+    <circle cx="24" cy="28" r="1.5" fill="#fbbf24" opacity="0.9"/>
+    <circle cx="32" cy="32" r="1.5" fill="#f472b6" opacity="0.9"/>
+    <circle cx="40" cy="30" r="1.5" fill="#a855f7" opacity="0.9"/>
+    <circle cx="28" cy="36" r="1.2" fill="#22d3ee" opacity="0.9"/>
+    <circle cx="36" cy="26" r="1.2" fill="#fde047" opacity="0.9"/>
+    <circle cx="42" cy="27" r="2.2" fill="#0c0a09"/>
+    <circle cx="41" cy="26" r="0.9" fill="#fff"/>
+    <path d="M30 14c2-4 4-6 4-6" stroke="#f472b6" stroke-width="2" stroke-linecap="round"/>
+    <path d="M30 50c2 4 4 6 4 6" stroke="#f472b6" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="12" cy="20" r="0.8" fill="#fde047" opacity="0.8"/>
+    <circle cx="52" cy="44" r="0.8" fill="#f472b6" opacity="0.7"/>
+    <circle cx="22" cy="48" r="0.7" fill="#a855f7" opacity="0.7"/>
+  </svg>`,
+  // Abyssal Titan — massive dark whale-kraken hybrid with glowing runes
+  26: `<svg class="fish-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="titanGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#a855f7" stop-opacity="0.5"/>
+        <stop offset="100%" stop-color="transparent"/>
+      </radialGradient>
+    </defs>
+    <circle cx="32" cy="32" r="28" fill="url(#titanGlow)"/>
+    <path d="M4 34c0-14 14-22 30-22 8 0 14 6 16 10l10-6v14l-10-6c-2 4-8 12-16 12C16 56 4 48 4 34z" fill="#1e1b4b"/>
+    <path d="M4 34c0-6 10-14 22-18-12 4-16 12-16 18s4 14 16 18C14 48 4 40 4 34z" fill="#312e81" opacity="0.6"/>
+    <circle cx="44" cy="28" r="4" fill="#0c0a1f"/>
+    <circle cx="44" cy="28" r="2.5" fill="#a855f7"/>
+    <circle cx="43.5" cy="27.5" r="0.8" fill="#fff"/>
+    <path d="M14 38c4 4 10 6 20 6" stroke="#a855f7" stroke-width="1.5" opacity="0.6" fill="none"/>
+    <path d="M18 24c0-4 0-8-2-10" stroke="#0f0a2e" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M26 20c0-4 2-8 0-10" stroke="#0f0a2e" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M20 44c0 4 -2 8 -4 10" stroke="#1e1b4b" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M28 46c0 4 0 8 -2 10" stroke="#1e1b4b" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <circle cx="16" cy="32" r="1" fill="#a855f7"/>
+    <circle cx="22" cy="36" r="0.8" fill="#a855f7"/>
+    <circle cx="30" cy="38" r="0.9" fill="#a855f7"/>
+    <circle cx="36" cy="34" r="0.7" fill="#c084fc"/>
+    <path d="M54 32l4-2-2 4z" fill="#1e1b4b"/>
+  </svg>`,
 };
 
 /** Get the SVG icon HTML for a fish by ID, with optional size class */
@@ -1364,6 +1607,10 @@ const RODS = [
   { id: 4, name: 'Platinum Rod', icon: '👑', price: 10000,   rarityBoost: 10,   desc: 'Legends of the deep' },
   { id: 5, name: 'Mythril Rod',  icon: '🔱', price: 100000,  rarityBoost: 25,   desc: 'The abyss calls back' },
   { id: 6, name: 'Celestial Rod', icon: '🌟', price: 1000000, rarityBoost: 60,  desc: 'Fish beyond the stars' },
+  { id: 7, name: 'Obsidian Rod',  icon: '🖤', price: 25000,   rarityBoost: 15,  desc: 'Forged from volcanic depths' },
+  { id: 8, name: 'Shadow Rod',    icon: '🌑', price: 75000,   rarityBoost: 22,  desc: 'Lures prey through darkness' },
+  { id: 9, name: 'Prismatic Rod', icon: '💫', price: 250000,  rarityBoost: 42,  desc: 'Refracts light from mythic waters' },
+  { id: 10, name: 'Infinity Rod', icon: '♾️', price: 650000,  rarityBoost: 55,  desc: 'Bends spacetime for the biggest catches' },
 ];
 
 const MAX_INVENTORY = 100;
@@ -1448,22 +1695,42 @@ function playCatchSound(rarity) {
     osc.connect(gain);
     gain.connect(ctx.destination);
 
-    const pitchMap = { common: 440, uncommon: 523, rare: 659, epic: 784, legendary: 988, mythical: 1175 };
-    const durationMap = { common: 0.1, uncommon: 0.12, rare: 0.15, epic: 0.2, legendary: 0.35, mythical: 0.5 };
+    const pitchMap = {
+      common: 440, uncommon: 523, rare: 659, epic: 784,
+      legendary: 988, mythic: 1047, ancient: 1108, godlike: 1319, mythical: 1175
+    };
+    const durationMap = {
+      common: 0.1, uncommon: 0.12, rare: 0.15, epic: 0.2,
+      legendary: 0.35, mythic: 0.4, ancient: 0.5, godlike: 0.7, mythical: 0.5
+    };
     const freq = pitchMap[rarity] || 440;
     const dur = durationMap[rarity] || 0.1;
 
-    osc.type = rarity === 'mythical' ? 'sine' : rarity === 'legendary' ? 'sine' : rarity === 'epic' ? 'triangle' : 'sine';
+    osc.type = rarity === 'epic' ? 'triangle' : 'sine';
     osc.frequency.setValueAtTime(freq, ctx.currentTime);
 
-    if (rarity === 'mythical') {
-      // Ascending arpeggio for mythical
+    if (rarity === 'godlike') {
+      // 5-note fanfare
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      osc.frequency.setValueAtTime(freq * 1.25, ctx.currentTime + 0.1);
+      osc.frequency.setValueAtTime(freq * 1.5,  ctx.currentTime + 0.2);
+      osc.frequency.setValueAtTime(freq * 1.75, ctx.currentTime + 0.3);
+      osc.frequency.setValueAtTime(freq * 2.0,  ctx.currentTime + 0.4);
+    } else if (rarity === 'ancient') {
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      osc.frequency.setValueAtTime(freq * 1.2, ctx.currentTime + 0.12);
+      osc.frequency.setValueAtTime(freq * 1.45, ctx.currentTime + 0.24);
+      osc.frequency.setValueAtTime(freq * 1.7, ctx.currentTime + 0.36);
+    } else if (rarity === 'mythic') {
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      osc.frequency.setValueAtTime(freq * 1.25, ctx.currentTime + 0.12);
+      osc.frequency.setValueAtTime(freq * 1.5, ctx.currentTime + 0.24);
+    } else if (rarity === 'mythical') {
       osc.frequency.setValueAtTime(freq, ctx.currentTime);
       osc.frequency.setValueAtTime(freq * 1.2, ctx.currentTime + 0.1);
       osc.frequency.setValueAtTime(freq * 1.4, ctx.currentTime + 0.2);
       osc.frequency.setValueAtTime(freq * 1.6, ctx.currentTime + 0.3);
     } else if (rarity === 'legendary') {
-      // Ascending arpeggio for legendary
       osc.frequency.setValueAtTime(freq, ctx.currentTime);
       osc.frequency.setValueAtTime(freq * 1.25, ctx.currentTime + 0.1);
       osc.frequency.setValueAtTime(freq * 1.5, ctx.currentTime + 0.2);
@@ -1735,7 +2002,10 @@ function doCast() {
       if (fish.shark) {
         // Shark: eats all non-legendary fish from inventory, $500 fine
         const before = state.inventory.length;
-        state.inventory = state.inventory.filter(id => FISH_BY_ID[id].rarity === 'legendary' || FISH_BY_ID[id].rarity === 'mythical');
+        state.inventory = state.inventory.filter(id => {
+          const r = FISH_BY_ID[id].rarity;
+          return r === 'legendary' || r === 'mythical' || r === 'mythic' || r === 'ancient' || r === 'godlike';
+        });
         const eaten = before - state.inventory.length;
         state.money = Math.max(0, state.money - 500);
         showSharkModal(eaten);
@@ -1882,18 +2152,36 @@ function moveToInventory(cacheIndex) {
 
 function displayCatch(fish) {
   const container = document.getElementById('catch-display');
-  const isEpic = fish.rarity === 'epic';
-  const isLegendary = fish.rarity === 'legendary';
-  const isMythical = fish.rarity === 'mythical';
-  const isJunk = fish.rarity === 'junk';
-  const extraClass = isMythical ? 'mythical-catch' : isLegendary ? 'legendary-catch' : isEpic ? 'epic-catch' : isJunk ? 'shake' : '';
+  const r = fish.rarity;
+  const isEpic = r === 'epic';
+  const isLegendary = r === 'legendary';
+  const isMythical = r === 'mythical';
+  const isMythic = r === 'mythic';
+  const isAncient = r === 'ancient';
+  const isGodlike = r === 'godlike';
+  const isJunk = r === 'junk';
+
+  let extraClass = '';
+  if (isGodlike) extraClass = 'godlike-catch';
+  else if (isAncient) extraClass = 'ancient-catch';
+  else if (isMythic) extraClass = 'mythic-catch';
+  else if (isMythical) extraClass = 'mythical-catch';
+  else if (isLegendary) extraClass = 'legendary-catch';
+  else if (isEpic) extraClass = 'epic-catch';
+  else if (isJunk) extraClass = 'shake';
 
   let labelHTML = '';
-  if (isMythical) {
+  if (isGodlike) {
+    labelHTML = `<div class="rare-label rarity-godlike">🔥 GODLIKE FISH CAUGHT!</div>`;
+  } else if (isAncient) {
+    labelHTML = `<div class="rare-label rarity-ancient">⚡ ANCIENT DISCOVERY!</div>`;
+  } else if (isMythic) {
+    labelHTML = `<div class="rare-label rarity-mythic">🌟 MYTHIC CATCH!</div>`;
+  } else if (isMythical) {
     labelHTML = `<div class="rare-label rarity-mythical">🌌 MYTHICAL CATCH!</div>`;
   } else if (isEpic || isLegendary) {
     const prefix = isLegendary ? '✨ LEGENDARY CATCH!' : '⚡ EPIC CATCH!';
-    labelHTML = `<div class="rare-label rarity-${fish.rarity}">${prefix}</div>`;
+    labelHTML = `<div class="rare-label rarity-${r}">${prefix}</div>`;
   } else if (isJunk) {
     labelHTML = `<div class="rare-label rarity-junk">Junk</div>`;
   }
@@ -2068,7 +2356,10 @@ function updateTraderInventory() {
 
 function updateRodShop() {
   const container = document.getElementById('rod-list');
-  container.innerHTML = RODS.map(rod => {
+  // Sort by price for display so the progression reads naturally, while the
+  // underlying RODS array stays in definition order (RODS[id] lookups rely on it).
+  const sortedRods = [...RODS].sort((a, b) => a.price - b.price);
+  container.innerHTML = sortedRods.map(rod => {
     const isOwned = state.ownedRods.includes(rod.id);
     const isEquipped = state.equippedRod === rod.id;
     const canAfford = state.money >= rod.price;
