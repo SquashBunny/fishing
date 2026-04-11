@@ -633,6 +633,229 @@ body::before {
 
 .modal-btn:hover { filter: brightness(1.15); }
 
+/* ========== RANK / PROGRESS ========== */
+.rank-value {
+  font-weight: 700;
+  text-shadow: 0 0 8px currentColor;
+}
+
+.rank-value.grandmaster-glow {
+  animation: grandmasterPulse 2s ease-in-out infinite;
+}
+
+.rank-progress-card {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: var(--bg-mid);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.85rem;
+}
+
+.rank-progress-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.rank-progress-top .rank-fishcount {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.rank-bar {
+  width: 100%;
+  height: 10px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.rank-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 0 8px currentColor;
+}
+
+.rank-progress-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+.rank-luck {
+  color: var(--warning);
+  font-weight: 600;
+}
+
+/* ========== BAIT ========== */
+.equipped-bait {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+}
+
+.equipped-bait.none {
+  background: rgba(255,255,255,0.03);
+  border-color: var(--border);
+  color: var(--text-dim);
+  justify-content: center;
+}
+
+.equipped-bait .bait-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--warning);
+  box-shadow: 0 0 8px var(--warning);
+}
+
+.equipped-bait .bait-count {
+  color: var(--warning);
+  font-weight: 600;
+  margin-left: auto;
+}
+
+.bait-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bait-item, .bait-inv-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--bg-mid);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  gap: 12px;
+  transition: all 0.2s;
+}
+
+.bait-inv-item { margin-bottom: 8px; }
+
+.bait-item.locked {
+  opacity: 0.55;
+  background: rgba(255,255,255,0.02);
+}
+
+.bait-inv-item.equipped {
+  border-color: var(--warning);
+  background: rgba(251, 191, 36, 0.08);
+}
+
+.bait-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.bait-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bait-name .bait-count {
+  color: var(--warning);
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+
+.bait-desc {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+.bait-lock {
+  font-size: 0.7rem;
+  color: var(--danger);
+  font-weight: 500;
+}
+
+.bait-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bait-buy-btn {
+  padding: 7px 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--accent);
+  color: #fff;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.bait-buy-btn.secondary {
+  background: rgba(59, 158, 255, 0.15);
+  color: var(--accent);
+}
+
+.bait-buy-btn:hover:not(:disabled) { filter: brightness(1.15); }
+.bait-buy-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.bait-equip-btn {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--warning);
+  color: #1a0f00;
+  transition: all 0.15s;
+}
+
+.bait-equip-btn.equipped {
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--warning);
+}
+
+.bait-equip-btn:hover:not(:disabled) { filter: brightness(1.1); }
+
+/* Level-up toast */
+.toast-levelup {
+  background: linear-gradient(135deg, rgba(251,191,36,0.15), rgba(251,191,36,0.05));
+  border-color: var(--warning) !important;
+  color: var(--warning);
+  font-size: 1rem;
+  padding: 14px 26px !important;
+  box-shadow: 0 8px 32px rgba(251, 191, 36, 0.3) !important;
+  animation: toastIn 0.3s ease, levelUpPulse 1.5s ease infinite, toastOut 0.4s ease 3.1s forwards;
+}
+
+@keyframes levelUpPulse {
+  0%, 100% { box-shadow: 0 8px 32px rgba(251, 191, 36, 0.3); }
+  50% { box-shadow: 0 12px 48px rgba(251, 191, 36, 0.6); }
+}
+
+@keyframes grandmasterPulse {
+  0%, 100% { text-shadow: 0 0 8px currentColor; }
+  50% { text-shadow: 0 0 16px currentColor, 0 0 28px currentColor; }
+}
+
 /* ========== INVENTORY FULL WARNING ========== */
 .inv-warning {
   background: rgba(231, 76, 60, 0.12);
@@ -777,6 +1000,12 @@ body::before {
         <div class="value inv-value" id="inv-display">0 / 100</div>
       </div>
     </div>
+    <div class="status-item">
+      <div>
+        <div class="label">Rank</div>
+        <div class="value rank-value" id="rank-display">Bronze 1</div>
+      </div>
+    </div>
   </div>
 
   <!-- Tab Navigation -->
@@ -784,6 +1013,7 @@ body::before {
     <button class="tab-btn active" data-tab="ocean">Ocean</button>
     <button class="tab-btn" data-tab="trader">Trader</button>
     <button class="tab-btn" data-tab="shop">Rod Shop</button>
+    <button class="tab-btn" data-tab="bait">Bait</button>
     <button class="tab-btn" data-tab="cache">Cache</button>
   </div>
 
@@ -791,10 +1021,12 @@ body::before {
   <div class="tab-panel active" id="panel-ocean">
     <div class="panel-card">
       <div id="inv-warning-ocean"></div>
+      <div id="equipped-bait-display"></div>
       <button class="cast-btn" id="cast-btn">Cast Line</button>
       <div class="catch-display" id="catch-display">
         <div style="color: var(--text-dim); font-size: 0.95rem;">Cast your line to start fishing!</div>
       </div>
+      <div id="rank-progress-display"></div>
       <div id="best-catch-display"></div>
     </div>
 
@@ -826,6 +1058,21 @@ body::before {
     <div class="panel-card">
       <h2>Rod Shop</h2>
       <div class="rod-list" id="rod-list"></div>
+    </div>
+  </div>
+
+  <!-- ======== BAIT PANEL ======== -->
+  <div class="tab-panel" id="panel-bait">
+    <div class="panel-card">
+      <h2>Bait Shop</h2>
+      <p style="color: var(--text-dim); font-size: 0.82rem; margin-bottom: 16px;">
+        Bait boosts your luck — rarer fish become more likely. 1 bait is consumed per cast.
+      </p>
+      <div class="bait-list" id="bait-shop-list"></div>
+    </div>
+    <div class="panel-card">
+      <h2>Your Bait</h2>
+      <div id="bait-inventory-list"></div>
     </div>
   </div>
 
@@ -1118,6 +1365,34 @@ const RARITY_LABELS = {
   common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic', legendary: 'Legendary'
 };
 
+/**
+ * Bait definitions. Bait is consumable (1 used per cast) and stackable.
+ * unlockRank is null for always-available, otherwise {stage, level} where
+ * both are zero-indexed (e.g. Gold 3 = {stage:2, level:2}).
+ */
+const BAITS = [
+  { id: 'basic',    name: 'Basic Bait',    luck: 1,  price: 10,  unlockRank: null,                desc: '+1 Luck' },
+  { id: 'improved', name: 'Improved Bait', luck: 3,  price: 100, unlockRank: null,                desc: '+3 Luck' },
+  { id: 'advanced', name: 'Advanced Bait', luck: 10, price: 500, unlockRank: { stage: 2, level: 2 }, desc: '+10 Luck — Req: Gold 3' },
+  { id: 'master',   name: 'Master Bait',   luck: 20, price: 750, unlockRank: { stage: 3, level: 2 }, desc: '+20 Luck — Req: Diamond 3' },
+];
+
+/**
+ * Rank stages — 7 stages × 3 levels each = 21 total ranks.
+ * fishPerLevel is how many fish are needed to advance ONE level within that stage.
+ */
+const RANK_STAGES = [
+  { name: 'Bronze',      color: '#b45309', fishPerLevel: 200  },
+  { name: 'Silver',      color: '#cbd5e1', fishPerLevel: 500  },
+  { name: 'Gold',        color: '#fbbf24', fishPerLevel: 750  },
+  { name: 'Diamond',     color: '#60a5fa', fishPerLevel: 1000 },
+  { name: 'Emerald',     color: '#10b981', fishPerLevel: 1500 },
+  { name: 'Master',      color: '#a855f7', fishPerLevel: 2000 },
+  { name: 'Grandmaster', color: '#f43f5e', fishPerLevel: 5000 },
+];
+const MAX_STAGE = RANK_STAGES.length - 1;
+const MAX_LEVEL = 2; // 0,1,2 = 1,2,3
+
 // ================================================================
 // GAME STATE
 // ================================================================
@@ -1132,6 +1407,13 @@ let state = {
   ownedRods: [0],      // array of rod IDs
   bestCatchId: -1,     // fish ID of best catch
   recentCatches: [],   // last 8 fish IDs (newest first)
+  // Bait system
+  baitInventory: { basic: 0, improved: 0, advanced: 0, master: 0 },
+  equippedBait: null,  // null or bait id string
+  // Leveling system
+  totalFishCaught: 0,     // lifetime counter (fish only, not junk)
+  fishTowardNextLevel: 0, // resets on level up
+  rank: { stage: 0, level: 0 }, // Bronze 1
 };
 
 let isCasting = false;
@@ -1211,20 +1493,37 @@ function playSellSound() {
 // ================================================================
 
 /**
- * Get adjusted weights based on the equipped rod.
- * Rod's rarityBoost multiplies weights for fish at index 3+ (Salmon and above),
- * but NOT junk items — junk weights stay fixed.
- * Dolphin only appears if net worth >= $1000.
+ * Get the current luck bonus from equipped bait + passive stage bonus.
+ * Bait luck is the direct value on the bait object. Passive stage luck is
+ * rank.stage * 2 (so Bronze=0, Silver=2, Gold=4, ..., Grandmaster=12).
+ */
+function getTotalLuck() {
+  let luck = state.rank.stage * 2;
+  if (state.equippedBait && state.baitInventory[state.equippedBait] > 0) {
+    const bait = BAITS.find(b => b.id === state.equippedBait);
+    if (bait) luck += bait.luck;
+  }
+  return luck;
+}
+
+/**
+ * Get adjusted weights based on the equipped rod and total luck.
+ * Rod's rarityBoost multiplies weights for fish at index 3+ (Salmon and above).
+ * Luck adds an additive bonus on top of the rod boost for the same fish.
+ * Junk weights stay fixed (not affected by rod or luck).
+ * Dolphin/Shark only appear if net worth >= $1000.
  */
 function getAdjustedWeights() {
   const rod = RODS[state.equippedRod];
   const netWorth = getNetWorth();
+  const luck = getTotalLuck();
+  const luckMultiplier = rod.rarityBoost + luck * 0.05;
   return FISH.map((fish, i) => {
     // Dolphin and Shark require net worth >= 1000
     if ((fish.dolphin || fish.shark) && netWorth < 1000) return 0;
-    // Junk items are not boosted by rods
+    // Junk items are not boosted by rods or luck
     if (fish.junk) return fish.weight;
-    if (i >= 3) return fish.weight * rod.rarityBoost;
+    if (i >= 3) return fish.weight * luckMultiplier;
     return fish.weight;
   });
 }
@@ -1250,6 +1549,142 @@ function catchFish() {
 }
 
 // ================================================================
+// LEVELING SYSTEM
+// ================================================================
+
+/** Format a rank object as a display string: "Gold 2" */
+function rankString(rank) {
+  return `${RANK_STAGES[rank.stage].name} ${rank.level + 1}`;
+}
+
+/** Returns true if the current rank is >= the required rank */
+function rankMeets(current, required) {
+  if (!required) return true;
+  if (current.stage > required.stage) return true;
+  if (current.stage < required.stage) return false;
+  return current.level >= required.level;
+}
+
+/** True if the bait is currently unlocked for the player */
+function isBaitUnlocked(bait) {
+  return rankMeets(state.rank, bait.unlockRank);
+}
+
+/** True if the player is at the max rank (Grandmaster 3) */
+function isMaxRank() {
+  return state.rank.stage === MAX_STAGE && state.rank.level === MAX_LEVEL;
+}
+
+/** Fish required for the next level at the current stage */
+function fishRequiredForNextLevel() {
+  return RANK_STAGES[state.rank.stage].fishPerLevel;
+}
+
+/** Called after each successful fish catch — increments counters and levels up if needed */
+function gainFish() {
+  state.totalFishCaught++;
+  if (isMaxRank()) return; // no progression past GM3
+
+  state.fishTowardNextLevel++;
+  const required = fishRequiredForNextLevel();
+  if (state.fishTowardNextLevel >= required) {
+    state.fishTowardNextLevel = 0;
+    levelUp();
+  }
+}
+
+/** Advance one level (and possibly stage). Shows celebration + unlock toasts. */
+function levelUp() {
+  // Track which baits were locked BEFORE the level-up so we can announce unlocks after
+  const wasLocked = BAITS.map(b => !isBaitUnlocked(b));
+
+  // Advance
+  if (state.rank.level < MAX_LEVEL) {
+    state.rank.level++;
+  } else if (state.rank.stage < MAX_STAGE) {
+    state.rank.stage++;
+    state.rank.level = 0;
+  }
+
+  const rankLabel = rankString(state.rank);
+  showLevelUpToast(rankLabel);
+  playLevelUpSound();
+
+  // Announce any newly-unlocked bait
+  BAITS.forEach((b, i) => {
+    if (wasLocked[i] && isBaitUnlocked(b)) {
+      showToast(`🔓 ${b.name} Unlocked!`);
+    }
+  });
+}
+
+/** Celebratory toast for leveling up */
+function showLevelUpToast(rankLabel) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast toast-levelup';
+  toast.innerHTML = `🎉 You reached <strong>${rankLabel}</strong>!`;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3500);
+}
+
+/** Ascending 3-note level-up chime */
+function playLevelUpSound() {
+  try {
+    const ctx = getAudioCtx();
+    [0, 0.12, 0.24].forEach((delay, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      const pitches = [523, 659, 784]; // C5, E5, G5
+      osc.frequency.setValueAtTime(pitches[i], ctx.currentTime + delay);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.3);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + 0.35);
+    });
+  } catch (e) {}
+}
+
+// ================================================================
+// BAIT ACTIONS
+// ================================================================
+
+/** Buy one or more of a bait type */
+function buyBait(baitId, quantity) {
+  quantity = quantity || 1;
+  const bait = BAITS.find(b => b.id === baitId);
+  if (!bait) return;
+  if (!isBaitUnlocked(bait)) {
+    showToast('Bait locked — reach the required rank first!');
+    return;
+  }
+  const totalCost = bait.price * quantity;
+  if (state.money < totalCost) {
+    showToast('Not enough money!');
+    return;
+  }
+  state.money -= totalCost;
+  state.baitInventory[baitId] += quantity;
+  showToast(`Bought ${quantity}× ${bait.name}`);
+  updateUI();
+  saveGame();
+}
+
+/** Equip or unequip a bait */
+function equipBait(baitId) {
+  if (baitId === null) {
+    state.equippedBait = null;
+  } else if (state.baitInventory[baitId] > 0) {
+    state.equippedBait = baitId;
+  }
+  updateUI();
+  saveGame();
+}
+
+// ================================================================
 // GAME ACTIONS
 // ================================================================
 
@@ -1263,6 +1698,13 @@ function doCast() {
     return;
   }
 
+  // Consume bait (if equipped and available) BEFORE casting
+  let baitUsed = null;
+  if (state.equippedBait && state.baitInventory[state.equippedBait] > 0) {
+    baitUsed = state.equippedBait;
+    state.baitInventory[state.equippedBait]--;
+  }
+
   isCasting = true;
   const btn = document.getElementById('cast-btn');
   btn.disabled = true;
@@ -1271,6 +1713,12 @@ function doCast() {
 
   setTimeout(() => {
     const fish = catchFish();
+
+    // If the bait we used just ran out, auto-unequip
+    if (baitUsed && state.baitInventory[baitUsed] === 0) {
+      state.equippedBait = null;
+      showToast(`Ran out of ${BAITS.find(b => b.id === baitUsed).name}!`);
+    }
 
     if (fish.junk) {
       // Junk items: don't add to inventory, apply money effect immediately
@@ -1303,6 +1751,9 @@ function doCast() {
       if (state.bestCatchId === -1 || fish.id > state.bestCatchId) {
         state.bestCatchId = fish.id;
       }
+
+      // Progression: count toward rank
+      gainFish();
 
       playCatchSound(fish.rarity);
       displayCatch(fish);
@@ -1559,6 +2010,15 @@ function updateUI() {
 
   // Cache
   updateCache();
+
+  // Rank + progression
+  updateRankDisplay();
+  updateRankProgress();
+
+  // Bait shop + inventory + equipped display
+  updateBaitShop();
+  updateBaitInventory();
+  updateEquippedBaitDisplay();
 }
 
 function updateTraderInventory() {
@@ -1695,6 +2155,124 @@ function updateCache() {
 }
 
 // ================================================================
+// RANK + BAIT UI
+// ================================================================
+
+function updateRankDisplay() {
+  const el = document.getElementById('rank-display');
+  const stage = RANK_STAGES[state.rank.stage];
+  el.textContent = rankString(state.rank);
+  el.style.color = stage.color;
+  el.classList.toggle('grandmaster-glow', state.rank.stage === MAX_STAGE);
+}
+
+function updateRankProgress() {
+  const el = document.getElementById('rank-progress-display');
+  const stage = RANK_STAGES[state.rank.stage];
+  const luck = getTotalLuck();
+
+  if (isMaxRank()) {
+    el.innerHTML = `
+      <div class="rank-progress-card">
+        <div class="rank-progress-top">
+          <span>🏆 <strong style="color:${stage.color}">Grandmaster 3</strong> — max rank</span>
+          <span class="rank-fishcount">Total fish: ${state.totalFishCaught.toLocaleString()}</span>
+        </div>
+        <div class="rank-luck">Luck: +${luck}</div>
+      </div>`;
+    return;
+  }
+
+  const required = stage.fishPerLevel;
+  const current = state.fishTowardNextLevel;
+  const pct = Math.min(100, (current / required) * 100);
+
+  el.innerHTML = `
+    <div class="rank-progress-card">
+      <div class="rank-progress-top">
+        <span>Progress to next level</span>
+        <span class="rank-fishcount">${current.toLocaleString()} / ${required.toLocaleString()}</span>
+      </div>
+      <div class="rank-bar">
+        <div class="rank-bar-fill" style="width:${pct}%; background:${stage.color}"></div>
+      </div>
+      <div class="rank-progress-bottom">
+        <span>Total fish caught: <strong>${state.totalFishCaught.toLocaleString()}</strong></span>
+        <span class="rank-luck">Luck: +${luck}</span>
+      </div>
+    </div>`;
+}
+
+function updateEquippedBaitDisplay() {
+  const el = document.getElementById('equipped-bait-display');
+  if (!state.equippedBait) {
+    el.innerHTML = `<div class="equipped-bait none">No bait equipped</div>`;
+    return;
+  }
+  const bait = BAITS.find(b => b.id === state.equippedBait);
+  const count = state.baitInventory[state.equippedBait];
+  el.innerHTML = `
+    <div class="equipped-bait">
+      <span class="bait-dot"></span>
+      Equipped: <strong>${bait.name}</strong> (+${bait.luck} Luck) — <span class="bait-count">x${count}</span>
+    </div>`;
+}
+
+function updateBaitShop() {
+  const container = document.getElementById('bait-shop-list');
+  container.innerHTML = BAITS.map(bait => {
+    const unlocked = isBaitUnlocked(bait);
+    const canAfford = state.money >= bait.price;
+    const disabled = !unlocked || !canAfford;
+    const lockLabel = unlocked ? '' : '<span class="bait-lock">🔒 Locked</span>';
+    const btn1 = `<button class="bait-buy-btn" ${disabled ? 'disabled' : ''} onclick="buyBait('${bait.id}', 1)">Buy 1 — $${bait.price.toLocaleString()}</button>`;
+    const cost10 = bait.price * 10;
+    const canAfford10 = state.money >= cost10;
+    const btn10 = `<button class="bait-buy-btn secondary" ${(!unlocked || !canAfford10) ? 'disabled' : ''} onclick="buyBait('${bait.id}', 10)">Buy 10 — $${cost10.toLocaleString()}</button>`;
+
+    return `
+      <div class="bait-item ${unlocked ? '' : 'locked'}">
+        <div class="bait-info">
+          <div class="bait-name">${bait.name} ${lockLabel}</div>
+          <div class="bait-desc">${bait.desc}</div>
+        </div>
+        <div class="bait-actions">
+          ${btn1}
+          ${btn10}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function updateBaitInventory() {
+  const container = document.getElementById('bait-inventory-list');
+  const owned = BAITS.filter(b => state.baitInventory[b.id] > 0);
+
+  if (owned.length === 0 && !state.equippedBait) {
+    container.innerHTML = `<div style="color: var(--text-dim); font-size: 0.85rem; text-align: center; padding: 8px;">You don't own any bait yet</div>`;
+    return;
+  }
+
+  let html = owned.map(bait => {
+    const count = state.baitInventory[bait.id];
+    const isEquipped = state.equippedBait === bait.id;
+    const btn = isEquipped
+      ? `<button class="bait-equip-btn equipped" onclick="equipBait(null)">Unequip</button>`
+      : `<button class="bait-equip-btn" onclick="equipBait('${bait.id}')">Equip</button>`;
+    return `
+      <div class="bait-inv-item ${isEquipped ? 'equipped' : ''}">
+        <div class="bait-info">
+          <div class="bait-name">${bait.name} <span class="bait-count">x${count}</span></div>
+          <div class="bait-desc">+${bait.luck} Luck</div>
+        </div>
+        ${btn}
+      </div>`;
+  }).join('');
+
+  container.innerHTML = html;
+}
+
+// ================================================================
 // TAB NAVIGATION
 // ================================================================
 
@@ -1735,6 +2313,11 @@ function saveGame() {
     ownedRods: state.ownedRods,
     bestCatchId: state.bestCatchId,
     recentCatches: state.recentCatches,
+    baitInventory: state.baitInventory,
+    equippedBait: state.equippedBait,
+    totalFishCaught: state.totalFishCaught,
+    fishTowardNextLevel: state.fishTowardNextLevel,
+    rank: state.rank,
   };
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -1753,6 +2336,11 @@ function loadGame() {
     state.ownedRods = data.ownedRods ?? [0];
     state.bestCatchId = data.bestCatchId ?? -1;
     state.recentCatches = data.recentCatches ?? [];
+    state.baitInventory = Object.assign({ basic: 0, improved: 0, advanced: 0, master: 0 }, data.baitInventory || {});
+    state.equippedBait = data.equippedBait ?? null;
+    state.totalFishCaught = data.totalFishCaught ?? 0;
+    state.fishTowardNextLevel = data.fishTowardNextLevel ?? 0;
+    state.rank = data.rank ?? { stage: 0, level: 0 };
   } catch (e) {
     // Corrupt save — start fresh
   }
