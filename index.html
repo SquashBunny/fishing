@@ -3818,6 +3818,8 @@ async function initFirebase() {
     db = firebase.firestore();
     firebaseReady = true;
     refreshLeaderboards();
+    // Auto-refresh leaderboards every 15 seconds
+    setInterval(refreshLeaderboards, 15000);
   } catch (e) {
     renderLeaderboardError('Failed to connect to leaderboard service.');
   }
@@ -3837,7 +3839,7 @@ function loadScript(src) {
 async function submitScore() {
   if (!firebaseReady || !playerName) return;
   const now = Date.now();
-  if (now - lastSubmitTime < 5000) return;
+  if (now - lastSubmitTime < 2000) return;
   lastSubmitTime = now;
 
   try {
