@@ -3923,13 +3923,22 @@ function updateWeatherBar() {
   }
 }
 
-function adminForceWeather(weatherId) {
+async function adminForceWeather(weatherId) {
   const w = WEATHER_TYPES.find(t => t.id === weatherId);
   if (!w) return;
   currentWeather = w;
   updateWeatherBar();
   showToast(`${w.emoji} Weather forced: ${w.name}`);
   scheduleNextWeather();
+  // Push to Firebase so all players get this weather
+  if (firebaseReady) {
+    try {
+      await db.collection('global').doc('weather').set({
+        weatherId: weatherId,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    } catch (e) {}
+  }
 }
 
 // ================================================================
@@ -4039,6 +4048,24 @@ function initChat() {
           if (data.text) showBroadcast(data.text);
         }
       });
+    }, () => {});
+
+  // Real-time global weather listener — admin-forced weather syncs to all players
+  let initialWeatherLoad = true;
+  db.collection('global').doc('weather')
+    .onSnapshot(snap => {
+      if (!snap.exists) return;
+      const data = snap.data();
+      if (!data.weatherId) return;
+      // Skip the first load so we don't overwrite local weather on page refresh
+      if (initialWeatherLoad) { initialWeatherLoad = false; return; }
+      const w = WEATHER_TYPES.find(t => t.id === data.weatherId);
+      if (w && currentWeather.id !== w.id) {
+        currentWeather = w;
+        updateWeatherBar();
+        scheduleNextWeather();
+        showToast(`${w.emoji} Weather changed globally: ${w.name}`);
+      }
     }, () => {});
 }
 
