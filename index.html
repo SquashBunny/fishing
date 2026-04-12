@@ -2318,6 +2318,7 @@ function doCast() {
 
     updateUI();
     saveGame();
+    submitScore();
 
     // Reset button
     btn.classList.remove('casting');
@@ -2376,7 +2377,6 @@ function doSell() {
 function buyRod(rodId) {
   const rod = RODS[rodId];
   if (state.ownedRods.includes(rodId)) {
-    // Equip it
     state.equippedRod = rodId;
   } else if (state.money >= rod.price) {
     state.money -= rod.price;
@@ -2386,6 +2386,7 @@ function buyRod(rodId) {
   }
   updateUI();
   saveGame();
+  submitScore();
 }
 
 // ================================================================
