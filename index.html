@@ -1446,6 +1446,97 @@ body::before {
   display: none;
 }
 
+/* ========== CHAOS BANNER ========== */
+.chaos-banner {
+  text-align: center;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(251,191,36,0.1));
+  border: 1px solid rgba(239,68,68,0.4);
+  color: var(--danger);
+  animation: chaosPulse 2s ease-in-out infinite;
+}
+
+@keyframes chaosPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(239,68,68,0.2); }
+  50% { box-shadow: 0 0 20px rgba(239,68,68,0.5); }
+}
+
+/* ========== ECONOMY ABUSE UI ========== */
+.econ-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.econ-label {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  min-width: 60px;
+}
+
+.econ-toggle {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.econ-toggle.on {
+  background: rgba(46,204,113,0.15);
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.chaos-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.chaos-btn {
+  padding: 10px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+
+.chaos-btn:hover { background: var(--bg-card-hover); }
+.chaos-btn.active { border-color: var(--danger); background: rgba(239,68,68,0.1); color: var(--danger); }
+
+.backup-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+
+.backup-slot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: var(--bg-card);
+  border-radius: 8px;
+  font-size: 0.78rem;
+  gap: 8px;
+}
+
+.backup-slot .backup-info { flex: 1; color: var(--text-dim); }
+.backup-slot .backup-info strong { color: var(--text); }
+
 /* ========== SCREEN FLASH ========== */
 .screen-flash {
   position: fixed;
@@ -1807,6 +1898,7 @@ body, body::before, .game-container, .panel-card, .status-bar, .tab-nav, .tab-bt
   </div>
 
   <!-- Weather Bar -->
+  <div class="chaos-banner" id="chaos-banner" style="display:none;"></div>
   <div class="weather-bar" id="weather-bar">
     <span id="weather-text">☀️ Clear Skies</span>
     <span class="weather-effect" id="weather-effect"></span>
@@ -2589,6 +2681,18 @@ let state = {
   questsCompleted: 0,
   achievements: [],
   visitedBiomes: ['ocean'],
+  // Economy abuse system
+  economyMods: {
+    sellMultiplier: 1,
+    catchMultiplier: 1,
+    xpMultiplier: 1,
+    mutationChanceBoost: 0,
+    rarityBoost: 0,
+    legendaryFlood: false,
+    trashSuppression: false,
+    bankOverflow: false,
+  },
+  chaosMode: null,
 };
 
 let isCasting = false;
@@ -2719,12 +2823,17 @@ function getAdjustedWeights() {
   const rod = RODS[state.equippedRod];
   const netWorth = getNetWorth();
   const luck = getTotalLuck();
+  const em = state.economyMods;
   const weatherBoost = currentWeather ? currentWeather.rarityBoost : 1;
-  const luckMultiplier = rod.rarityBoost * (1 + luck * 0.075) * weatherBoost;
+  const luckMultiplier = (rod.rarityBoost + em.rarityBoost) * (1 + luck * 0.075) * weatherBoost;
+  const RARE_TIERS = new Set(['rare','epic','legendary','mythic','ancient','godlike','mythical']);
   return pool.map(fish => {
     if ((fish.dolphin || fish.shark) && netWorth < 1000) return 0;
-    if (fish.junk) return fish.weight;
-    // Boost all non-junk fish that aren't the 3 most common base fish
+    if (fish.junk) return em.trashSuppression ? 0 : fish.weight;
+    if (em.legendaryFlood) {
+      if (['common','uncommon','rare'].includes(fish.rarity)) return 0;
+      return fish.weight * luckMultiplier * 10;
+    }
     if (fish.rarity !== 'common' && fish.rarity !== 'uncommon') return fish.weight * luckMultiplier;
     return fish.weight;
   });
@@ -2795,7 +2904,7 @@ function gainFish() {
   state.totalFishCaught++;
   if (isMaxRank()) return; // no progression past GM3
 
-  state.fishTowardNextLevel++;
+  state.fishTowardNextLevel += state.economyMods.xpMultiplier || 1;
   const required = fishRequiredForNextLevel();
   if (state.fishTowardNextLevel >= required) {
     state.fishTowardNextLevel = 0;
@@ -3019,7 +3128,8 @@ function doSell() {
   state.inventory.forEach(fishId => {
     const fish = FISH_BY_ID[fishId];
     counts[fishId] = (counts[fishId] || 0) + 1;
-    totalEarnings += fish.value;
+    const em = state.economyMods;
+    totalEarnings += Math.round(fish.value * em.sellMultiplier * (em.bankOverflow ? 10 : 1));
   });
 
   state.money += totalEarnings;
@@ -3610,6 +3720,8 @@ function saveGame() {
     questsCompleted: state.questsCompleted,
     achievements: state.achievements,
     visitedBiomes: state.visitedBiomes,
+    economyMods: state.economyMods,
+    chaosMode: state.chaosMode,
   };
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -3638,6 +3750,12 @@ function loadGame() {
     state.questsCompleted = data.questsCompleted ?? 0;
     state.achievements = data.achievements ?? [];
     state.visitedBiomes = data.visitedBiomes ?? ['ocean'];
+    state.economyMods = Object.assign({
+      sellMultiplier:1, catchMultiplier:1, xpMultiplier:1,
+      mutationChanceBoost:0, rarityBoost:0,
+      legendaryFlood:false, trashSuppression:false, bankOverflow:false,
+    }, data.economyMods || {});
+    state.chaosMode = data.chaosMode ?? null;
   } catch (e) {
     // Corrupt save — start fresh
   }
@@ -3960,7 +4078,8 @@ const MUTATIONS = [
 let lastMutation = null;
 
 function rollMutation() {
-  if (Math.random() >= currentWeather.mutationChance) return null;
+  const totalMutChance = currentWeather.mutationChance + (state.economyMods.mutationChanceBoost || 0);
+  if (Math.random() >= totalMutChance) return null;
 
   let pool = MUTATIONS.filter(m => m.id !== 'void');
   // Void mutation only during Void Storm
@@ -3990,8 +4109,16 @@ function toggleChat() {
 async function sendChatMessage() {
   const input = document.getElementById('chat-input');
   const text = input.value.trim().slice(0, 100);
-  if (!text || !firebaseReady || !playerName) return;
+  if (!text) return;
   input.value = '';
+
+  // Intercept admin commands
+  if (text.startsWith('/') && currentAdminRole === 'superadmin') {
+    executeAdminCommand(text);
+    return;
+  }
+
+  if (!firebaseReady || !playerName) return;
 
   try {
     await db.collection('chat').add({
@@ -4068,6 +4195,26 @@ function initChat() {
         showToast(`${w.emoji} Weather: ${w.name}`);
       }
     }, () => {});
+
+  // Real-time chaos mode listener — syncs chaos across all players
+  db.collection('global').doc('chaos')
+    .onSnapshot(snap => {
+      if (!snap.exists) return;
+      const data = snap.data();
+      if (data.modeId && CHAOS_MODES[data.modeId] && state.chaosMode !== data.modeId) {
+        state.chaosMode = data.modeId;
+        state.economyMods = Object.assign({...DEFAULT_ECON_MODS}, CHAOS_MODES[data.modeId].mods);
+        updateChaosBanner();
+        showToast(`${CHAOS_MODES[data.modeId].name} ACTIVATED!`);
+        saveGame(); updateUI();
+      } else if (!data.modeId && state.chaosMode) {
+        state.chaosMode = null;
+        state.economyMods = {...DEFAULT_ECON_MODS};
+        updateChaosBanner();
+        showToast('Chaos mode deactivated');
+        saveGame(); updateUI();
+      }
+    }, () => {});
 }
 
 function showBroadcast(text) {
@@ -4099,6 +4246,191 @@ document.addEventListener('keydown', (e) => {
     sendChatMessage();
   }
 });
+
+// ================================================================
+// BACKUP & RESTORE SYSTEM
+// ================================================================
+
+const BACKUP_SLOTS = 5;
+
+function createBackup(slot) {
+  if (slot < 0 || slot >= BACKUP_SLOTS) return;
+  saveGame();
+  const data = localStorage.getItem(SAVE_KEY);
+  const meta = { timestamp: Date.now(), money: state.money, fish: state.totalFishCaught, rank: rankString(state.rank) };
+  localStorage.setItem(`abyssalTidesBackup_${slot}`, JSON.stringify({ data, meta }));
+  showToast(`Backup saved to slot ${slot}`);
+}
+
+function loadBackup(slot) {
+  const raw = localStorage.getItem(`abyssalTidesBackup_${slot}`);
+  if (!raw) { showToast(`Slot ${slot} is empty`); return; }
+  if (!confirm(`Restore backup from slot ${slot}? Current progress will be overwritten.`)) return;
+  const backup = JSON.parse(raw);
+  localStorage.setItem(SAVE_KEY, backup.data);
+  location.reload();
+}
+
+function listBackups() {
+  const backups = [];
+  for (let i = 0; i < BACKUP_SLOTS; i++) {
+    const raw = localStorage.getItem(`abyssalTidesBackup_${i}`);
+    if (raw) {
+      const b = JSON.parse(raw);
+      backups.push({ slot: i, ...b.meta });
+    } else {
+      backups.push({ slot: i, empty: true });
+    }
+  }
+  return backups;
+}
+
+function softWipe() {
+  if (!confirm('Soft wipe: resets money, inventory, and bait but keeps rank, rods, and achievements. Continue?')) return;
+  state.money = 0;
+  state.inventory = [];
+  state.cache = [];
+  state.recentCatches = [];
+  state.baitInventory = { basic: 0, improved: 0, advanced: 0, master: 0 };
+  state.equippedBait = null;
+  state.economyMods = { sellMultiplier:1, catchMultiplier:1, xpMultiplier:1, mutationChanceBoost:0, rarityBoost:0, legendaryFlood:false, trashSuppression:false, bankOverflow:false };
+  state.chaosMode = null;
+  showToast('Soft wipe complete');
+  saveGame(); updateUI(); submitScore();
+}
+
+// ================================================================
+// CHAOS MODE SYSTEM
+// ================================================================
+
+const DEFAULT_ECON_MODS = { sellMultiplier:1, catchMultiplier:1, xpMultiplier:1, mutationChanceBoost:0, rarityBoost:0, legendaryFlood:false, trashSuppression:false, bankOverflow:false };
+
+const CHAOS_MODES = {
+  money_rain:           { name: '💰 Money Rain',            mods: { sellMultiplier: 100, catchMultiplier: 50 } },
+  legendary_apocalypse: { name: '⚡ Legendary Apocalypse',  mods: { legendaryFlood: true, mutationChanceBoost: 0.5 } },
+  broken_economy:       { name: '💀 Broken Economy',        mods: { sellMultiplier: 1000, rarityBoost: 100, bankOverflow: true } },
+  casino_fishing:       { name: '🎰 Casino Fishing',        mods: { mutationChanceBoost: 0.3, rarityBoost: 20 } },
+  max_progression:      { name: '🚀 Max Progression',       mods: { xpMultiplier: 100, sellMultiplier: 10 } },
+  clean_ocean:          { name: '🧹 Clean Ocean',            mods: { trashSuppression: true } },
+};
+
+function activateChaosMode(modeId) {
+  const mode = CHAOS_MODES[modeId];
+  if (!mode) return;
+  state.chaosMode = modeId;
+  state.economyMods = Object.assign({...DEFAULT_ECON_MODS}, mode.mods);
+  showToast(`${mode.name} ACTIVATED!`);
+  updateChaosBanner();
+  saveGame(); updateUI();
+  pushChaosToFirebase(modeId);
+}
+
+function deactivateChaosMode() {
+  state.chaosMode = null;
+  state.economyMods = {...DEFAULT_ECON_MODS};
+  showToast('Chaos mode deactivated');
+  updateChaosBanner();
+  saveGame(); updateUI();
+  pushChaosToFirebase(null);
+}
+
+function updateChaosBanner() {
+  const banner = document.getElementById('chaos-banner');
+  if (!banner) return;
+  if (state.chaosMode && CHAOS_MODES[state.chaosMode]) {
+    banner.textContent = `${CHAOS_MODES[state.chaosMode].name} ACTIVE`;
+    banner.style.display = 'block';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+function pushChaosToFirebase(modeId) {
+  if (!firebaseReady) return;
+  try { db.collection('global').doc('chaos').set({ modeId, timestamp: firebase.firestore.FieldValue.serverTimestamp() }); } catch (e) {}
+}
+
+// ================================================================
+// CHAT COMMAND SYSTEM
+// ================================================================
+
+function executeAdminCommand(text) {
+  const parts = text.trim().split(/\s+/);
+  const cmd = parts[0].toLowerCase();
+  const args = parts.slice(1);
+
+  switch (cmd) {
+    case '/givecoins': {
+      const amt = parseInt(args[0]);
+      if (isNaN(amt)) { showToast('Usage: /givecoins <amount>'); return; }
+      adminAddMoney(amt);
+      return;
+    }
+    case '/setlevel': {
+      const s = parseInt(args[0]), l = parseInt(args[1] || 0);
+      if (isNaN(s)) { showToast('Usage: /setlevel <stage> <level>'); return; }
+      adminSetRank(s, l);
+      return;
+    }
+    case '/unlockall': adminUnlockEverything(); return;
+    case '/spawnfish': {
+      const name = args.join(' ').toLowerCase();
+      if (!name) { showToast('Usage: /spawnfish <fish name>'); return; }
+      const allFish = [...FISH, ...Object.values(BIOME_FISH).flat()];
+      const match = allFish.find(f => f.name.toLowerCase().includes(name) && !f.junk);
+      if (match) adminForceCatch(match.id); else showToast(`No fish matching "${name}"`);
+      return;
+    }
+    case '/multiplier': {
+      const key = args[0], val = parseFloat(args[1]);
+      if (!key || isNaN(val)) { showToast('Usage: /multiplier <sell|catch|xp|rarity> <value>'); return; }
+      const map = { sell: 'sellMultiplier', catch: 'catchMultiplier', xp: 'xpMultiplier', rarity: 'rarityBoost' };
+      if (map[key]) { state.economyMods[map[key]] = val; showToast(`${key} multiplier set to ${val}`); saveGame(); updateUI(); }
+      else showToast('Valid keys: sell, catch, xp, rarity');
+      return;
+    }
+    case '/flood': {
+      if (args[0] === 'off') { state.economyMods.legendaryFlood = false; showToast('Legendary flood OFF'); }
+      else { state.economyMods.legendaryFlood = true; showToast('Legendary flood ON — only legendary+ fish!'); }
+      saveGame(); updateUI(); return;
+    }
+    case '/trash': {
+      state.economyMods.trashSuppression = (args[0] === 'off');
+      showToast(`Trash suppression ${state.economyMods.trashSuppression ? 'ON' : 'OFF'}`);
+      saveGame(); updateUI(); return;
+    }
+    case '/bankoverflow': {
+      state.economyMods.bankOverflow = !state.economyMods.bankOverflow;
+      showToast(`Bank overflow ${state.economyMods.bankOverflow ? 'ON (10x sell)' : 'OFF'}`);
+      saveGame(); updateUI(); return;
+    }
+    case '/chaos': {
+      if (args[0] === 'off') { deactivateChaosMode(); return; }
+      const modeId = args.join('_');
+      if (CHAOS_MODES[modeId]) activateChaosMode(modeId);
+      else showToast('Modes: ' + Object.keys(CHAOS_MODES).join(', '));
+      return;
+    }
+    case '/backup': {
+      const slot = parseInt(args[1]);
+      if (args[0] === 'save' && !isNaN(slot)) { createBackup(slot); return; }
+      if (args[0] === 'load' && !isNaN(slot)) { loadBackup(slot); return; }
+      showToast('Usage: /backup save|load <0-4>');
+      return;
+    }
+    case '/wipe': {
+      if (args[0] === 'soft') { softWipe(); return; }
+      if (args[0] === 'hard') { adminResetGame(); return; }
+      showToast('Usage: /wipe soft|hard');
+      return;
+    }
+    case '/help': {
+      showToast('/givecoins /setlevel /unlockall /spawnfish /multiplier /flood /trash /bankoverflow /chaos /backup /wipe');
+      return;
+    }
+    default: showToast(`Unknown command: ${cmd}. Type /help`);
+  }
+}
 
 // ================================================================
 // ADMIN PANEL SYSTEM
@@ -4382,6 +4714,41 @@ function renderAdminPanel(overlay) {
       <div class="admin-row" style="margin-top:8px;">
         <button class="admin-btn orange" onclick="adminResetGame()">Reset Game</button>
       </div>
+    </div>
+    <div class="admin-section super-section">
+      <h3>💀 Economy Abuse</h3>
+      <div class="econ-row">
+        <span class="econ-label">Sell ×</span>
+        <input type="number" class="admin-input" id="econ-sell" value="${state.economyMods.sellMultiplier}" min="0.1" step="1" style="width:80px;"/>
+        <span class="econ-label">XP ×</span>
+        <input type="number" class="admin-input" id="econ-xp" value="${state.economyMods.xpMultiplier}" min="1" step="1" style="width:80px;"/>
+        <span class="econ-label">Rarity +</span>
+        <input type="number" class="admin-input" id="econ-rarity" value="${state.economyMods.rarityBoost}" min="0" step="5" style="width:80px;"/>
+        <button class="admin-btn red" onclick="state.economyMods.sellMultiplier=Number(document.getElementById('econ-sell').value);state.economyMods.xpMultiplier=Number(document.getElementById('econ-xp').value);state.economyMods.rarityBoost=Number(document.getElementById('econ-rarity').value);saveGame();updateUI();showToast('Multipliers applied');">Apply</button>
+      </div>
+      <div class="econ-row">
+        <button class="econ-toggle ${state.economyMods.legendaryFlood?'on':''}" onclick="state.economyMods.legendaryFlood=!state.economyMods.legendaryFlood;saveGame();renderAdminPanel(adminOverlay);">Legendary Flood ${state.economyMods.legendaryFlood?'ON':'OFF'}</button>
+        <button class="econ-toggle ${state.economyMods.trashSuppression?'on':''}" onclick="state.economyMods.trashSuppression=!state.economyMods.trashSuppression;saveGame();renderAdminPanel(adminOverlay);">No Trash ${state.economyMods.trashSuppression?'ON':'OFF'}</button>
+        <button class="econ-toggle ${state.economyMods.bankOverflow?'on':''}" onclick="state.economyMods.bankOverflow=!state.economyMods.bankOverflow;saveGame();renderAdminPanel(adminOverlay);">Bank ×10 ${state.economyMods.bankOverflow?'ON':'OFF'}</button>
+        <button class="econ-toggle ${state.economyMods.mutationChanceBoost>0?'on':''}" onclick="state.economyMods.mutationChanceBoost=state.economyMods.mutationChanceBoost>0?0:0.5;saveGame();renderAdminPanel(adminOverlay);">Mutation+ ${state.economyMods.mutationChanceBoost>0?'ON':'OFF'}</button>
+      </div>
+      <div style="font-size:0.82rem;font-weight:600;color:var(--danger);margin-top:12px;">Chaos Modes</div>
+      <div class="chaos-grid">
+        ${Object.entries(CHAOS_MODES).map(([id,m]) => `<button class="chaos-btn ${state.chaosMode===id?'active':''}" onclick="activateChaosMode('${id}');renderAdminPanel(adminOverlay);">${m.name}</button>`).join('')}
+        <button class="chaos-btn" onclick="deactivateChaosMode();renderAdminPanel(adminOverlay);">❌ Disable</button>
+      </div>
+      <div style="font-size:0.82rem;font-weight:600;color:var(--text-dim);margin-top:12px;">Backups</div>
+      <div class="backup-list">
+        ${listBackups().map(b => `<div class="backup-slot">
+          <span class="backup-info">${b.empty ? `Slot ${b.slot}: <em>Empty</em>` : `Slot ${b.slot}: <strong>$${b.money?.toLocaleString()}</strong> · ${b.fish?.toLocaleString()} fish · ${b.rank || '?'}`}</span>
+          <button class="admin-btn blue" style="font-size:0.7rem;padding:4px 8px;" onclick="createBackup(${b.slot});renderAdminPanel(adminOverlay);">Save</button>
+          ${b.empty ? '' : `<button class="admin-btn orange" style="font-size:0.7rem;padding:4px 8px;" onclick="loadBackup(${b.slot})">Load</button>`}
+        </div>`).join('')}
+      </div>
+      <div class="admin-row" style="margin-top:12px;">
+        <button class="admin-btn orange" onclick="softWipe()">Soft Wipe</button>
+      </div>
+      <div style="font-size:0.72rem;color:var(--text-dim);margin-top:10px;">Type <strong>/help</strong> in chat for all commands</div>
     </div>` : '';
 
   overlay.innerHTML = `
@@ -4668,6 +5035,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadGame();
   applyBiomeTheme(state.currentBiome);
   initQuests();
+  updateChaosBanner();
   updateUI();
 
   // Weather system
