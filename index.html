@@ -928,24 +928,48 @@ body::before {
   50% { text-shadow: 0 0 16px currentColor, 0 0 28px currentColor; }
 }
 
-/* ========== LEADERBOARD ========== */
-.lb-section-title {
-  font-size: 0.95rem;
-  font-weight: 600;
-  margin-bottom: 10px;
-  color: var(--text);
+/* ========== SIDEBAR LEADERBOARDS ========== */
+.lb-sidebar {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 220px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  z-index: 10;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
-.lb-list { display: flex; flex-direction: column; gap: 4px; }
+.lb-sidebar-left { left: 12px; }
+.lb-sidebar-right { right: 12px; }
+
+.lb-sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.lb-section-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+.lb-list { display: flex; flex-direction: column; gap: 3px; }
 
 .lb-row {
   display: flex;
   align-items: center;
-  padding: 8px 12px;
+  padding: 5px 8px;
   background: var(--bg-mid);
-  border-radius: 8px;
-  font-size: 0.85rem;
-  gap: 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  gap: 6px;
 }
 
 .lb-row.highlight {
@@ -956,7 +980,7 @@ body::before {
 .lb-rank {
   font-weight: 700;
   color: var(--text-dim);
-  min-width: 26px;
+  min-width: 22px;
   text-align: center;
 }
 
@@ -964,24 +988,36 @@ body::before {
 .lb-row:nth-child(2) .lb-rank { color: #cbd5e1; }
 .lb-row:nth-child(3) .lb-rank { color: #b45309; }
 
-.lb-name { flex: 1; font-weight: 500; }
-.lb-score { font-weight: 700; color: var(--success); }
-.lb-loading { color: var(--text-dim); font-size: 0.85rem; text-align: center; padding: 12px; }
-.lb-empty { color: var(--text-dim); font-size: 0.85rem; text-align: center; padding: 12px; }
+.lb-name {
+  flex: 1;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lb-score { font-weight: 700; color: var(--success); white-space: nowrap; }
+.lb-loading { color: var(--text-dim); font-size: 0.78rem; text-align: center; padding: 10px; }
+.lb-empty { color: var(--text-dim); font-size: 0.78rem; text-align: center; padding: 10px; }
 
 .lb-refresh-btn {
-  padding: 6px 14px;
+  padding: 4px 8px;
   border: 1px solid var(--border);
   background: var(--bg-mid);
   color: var(--text-dim);
-  border-radius: 8px;
-  font-size: 0.78rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  line-height: 1;
 }
 
 .lb-refresh-btn:hover { background: var(--bg-card-hover); color: var(--text); }
+
+/* Hide sidebars on screens too narrow to fit them */
+@media (max-width: 1100px) {
+  .lb-sidebar { display: none; }
+}
 
 /* ========== INVENTORY FULL WARNING ========== */
 .inv-warning {
@@ -1175,7 +1211,6 @@ body::before {
     <button class="tab-btn" data-tab="shop">Rod Shop</button>
     <button class="tab-btn" data-tab="bait">Bait</button>
     <button class="tab-btn" data-tab="cache">Cache</button>
-    <button class="tab-btn" data-tab="leaderboard">Leaderboard</button>
   </div>
 
   <!-- ======== OCEAN PANEL ======== -->
@@ -1252,27 +1287,27 @@ body::before {
   </div>
 </div>
 
-  <!-- ======== LEADERBOARD PANEL ======== -->
-  <div class="tab-panel" id="panel-leaderboard">
-    <div class="panel-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <h2>Global Leaderboards</h2>
-        <button class="lb-refresh-btn" id="lb-refresh-btn" onclick="refreshLeaderboards()">Refresh</button>
-      </div>
-      <div id="lb-player-name" style="font-size:0.82rem;color:var(--text-dim);margin-bottom:16px;"></div>
-      <div class="lb-section">
-        <h3 class="lb-section-title">🐟 Total Fish Caught</h3>
-        <div class="lb-list" id="lb-fish-list">
-          <div class="lb-loading">Loading...</div>
-        </div>
-      </div>
-      <div class="lb-section" style="margin-top:20px;">
-        <h3 class="lb-section-title">💰 Total Money</h3>
-        <div class="lb-list" id="lb-money-list">
-          <div class="lb-loading">Loading...</div>
-        </div>
-      </div>
-    </div>
+
+</div>
+
+<!-- ======== SIDEBAR LEADERBOARDS (always visible) ======== -->
+<div class="lb-sidebar lb-sidebar-left" id="lb-sidebar-left">
+  <div class="lb-sidebar-header">
+    <h3 class="lb-section-title">🐟 Fish Caught</h3>
+    <button class="lb-refresh-btn" onclick="refreshLeaderboards()">↻</button>
+  </div>
+  <div class="lb-list" id="lb-fish-list">
+    <div class="lb-loading">Loading...</div>
+  </div>
+</div>
+
+<div class="lb-sidebar lb-sidebar-right" id="lb-sidebar-right">
+  <div class="lb-sidebar-header">
+    <h3 class="lb-section-title">💰 Money</h3>
+    <button class="lb-refresh-btn" onclick="refreshLeaderboards()">↻</button>
+  </div>
+  <div class="lb-list" id="lb-money-list">
+    <div class="lb-loading">Loading...</div>
   </div>
 </div>
 
@@ -2928,7 +2963,6 @@ function escapeHTML(str) {
 function promptUsername() {
   return new Promise(resolve => {
     if (playerName) {
-      document.getElementById('lb-player-name').textContent = `Playing as: ${playerName}`;
       resolve();
       return;
     }
@@ -2943,7 +2977,6 @@ function promptUsername() {
       if (!name) return;
       playerName = name;
       localStorage.setItem('abyssalTidesPlayerName', playerName);
-      document.getElementById('lb-player-name').textContent = `Playing as: ${playerName}`;
       modal.style.display = 'none';
       resolve();
     }
@@ -2968,10 +3001,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Tab buttons
   document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      switchTab(btn.dataset.tab);
-      if (btn.dataset.tab === 'leaderboard') refreshLeaderboards();
-    });
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });
 
   // Cast button
