@@ -2096,6 +2096,8 @@ const RANK_STAGES = [
   { name: 'Aquatic Legend',           color: '#fbbf24', fishPerLevel: 22000, levels: 1, funny: true, emoji: '🏆' },
   { name: 'Fish God',                 color: '#fcd34d', fishPerLevel: 25000, levels: 1, funny: true, emoji: '👑', rainbow: true },
   { name: 'Final Boss of Fishing',    color: '#fde68a', fishPerLevel: 25000, levels: 1, funny: true, emoji: '🔱', rainbow: true },
+  // Super Admin only — not reachable through normal progression
+  { name: 'Overpowered Lord Who Rules Over All Fish', color: '#ff0000', fishPerLevel: 999999, levels: 1, funny: true, emoji: '⚡', rainbow: true, adminOnly: true },
 ];
 const MAX_STAGE = RANK_STAGES.length - 1;
 
@@ -2303,7 +2305,11 @@ function isBaitUnlocked(bait) {
 /** True if the player is at the final rank */
 function isMaxRank() {
   const stage = RANK_STAGES[state.rank.stage];
-  return state.rank.stage === MAX_STAGE && state.rank.level === stage.levels - 1;
+  if (state.rank.stage === MAX_STAGE && state.rank.level === stage.levels - 1) return true;
+  // Check if the next stage is adminOnly (unreachable through normal play)
+  const nextStage = state.rank.level >= stage.levels - 1 ? RANK_STAGES[state.rank.stage + 1] : null;
+  if (nextStage && nextStage.adminOnly) return true;
+  return false;
 }
 
 /** Fish required for the next level at the current stage */
@@ -3225,6 +3231,15 @@ function adminUnlockEverything() {
   saveGame(); updateUI(); submitScore();
 }
 
+function adminSetOverpowered() {
+  const opStage = RANK_STAGES.findIndex(s => s.adminOnly);
+  if (opStage === -1) return;
+  state.rank = { stage: opStage, level: 0 };
+  state.fishTowardNextLevel = 0;
+  showToast(`⚡ You are now the Overpowered Lord!`);
+  saveGame(); updateUI(); submitScore();
+}
+
 function adminResetGame() {
   if (!confirm('Are you sure you want to RESET the entire game? This cannot be undone.')) return;
   localStorage.removeItem(SAVE_KEY);
@@ -3354,6 +3369,7 @@ function renderAdminPanel(overlay) {
       </div>
       <div class="admin-row">
         <button class="admin-btn red" onclick="adminMaxRank()">Max Rank</button>
+        <button class="admin-btn red" onclick="adminSetOverpowered()">⚡ Overpowered Lord</button>
         <button class="admin-btn red" onclick="adminUnlockEverything()">Unlock Everything</button>
       </div>
       <div class="admin-row">
