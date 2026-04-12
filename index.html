@@ -1446,6 +1446,113 @@ body::before {
   display: none;
 }
 
+/* ========== SCREEN FLASH ========== */
+.screen-flash {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #fff;
+  z-index: 300;
+  pointer-events: none;
+  animation: flashFade 0.35s ease-out forwards;
+}
+
+@keyframes flashFade {
+  0% { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+
+/* ========== QUESTS ========== */
+.quest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quest-card {
+  padding: 12px 14px;
+  background: var(--bg-mid);
+  border-radius: 10px;
+  border-left: 3px solid var(--accent);
+}
+
+.quest-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.quest-desc {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.quest-reward {
+  font-size: 0.75rem;
+  color: var(--success);
+  font-weight: 600;
+}
+
+.quest-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.quest-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.quest-progress-text {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  margin-top: 4px;
+  text-align: right;
+}
+
+/* ========== ACHIEVEMENTS ========== */
+.achievement-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 6px;
+}
+
+.achievement-badge {
+  padding: 8px;
+  background: var(--bg-mid);
+  border-radius: 8px;
+  text-align: center;
+  font-size: 0.75rem;
+  opacity: 0.3;
+  transition: all 0.2s;
+}
+
+.achievement-badge.unlocked {
+  opacity: 1;
+  border: 1px solid var(--accent);
+  background: rgba(59, 158, 255, 0.06);
+}
+
+.achievement-badge .ach-icon { font-size: 1.4rem; display: block; margin-bottom: 3px; }
+.achievement-badge .ach-name { font-weight: 600; }
+.achievement-badge .ach-desc { color: var(--text-dim); font-size: 0.68rem; margin-top: 2px; }
+
+.toast-achievement {
+  background: linear-gradient(135deg, rgba(59,158,255,0.15), rgba(59,158,255,0.05));
+  border-color: var(--accent) !important;
+  color: var(--accent);
+  font-size: 1rem;
+  padding: 14px 26px !important;
+  box-shadow: 0 8px 32px rgba(59, 158, 255, 0.3) !important;
+  animation: toastIn 0.3s ease, toastOut 0.4s ease 3.1s forwards;
+}
+
 /* ========== BIOME SYSTEM ========== */
 .biome-grid {
   display: grid;
@@ -1730,10 +1837,20 @@ body, body::before, .game-container, .panel-card, .status-bar, .tab-nav, .tab-bt
     </div>
 
     <div class="panel-card">
+      <h2>Active Quests</h2>
+      <div class="quest-list" id="quest-list"></div>
+    </div>
+
+    <div class="panel-card">
       <h2>Recent Catches</h2>
       <div class="recent-list" id="recent-list">
         <div style="color: var(--text-dim); font-size: 0.85rem; text-align: center; padding: 12px;">No catches yet</div>
       </div>
+    </div>
+
+    <div class="panel-card">
+      <h2>Achievements <span style="font-size:0.8rem;color:var(--text-dim);" id="ach-count"></span></h2>
+      <div class="achievement-grid" id="achievement-grid"></div>
     </div>
   </div>
 
@@ -2467,6 +2584,11 @@ let state = {
   fishTowardNextLevel: 0, // resets on level up
   rank: { stage: 0, level: 0 }, // Bronze 1
   currentBiome: 'ocean',
+  // Quests & Achievements
+  quests: [],
+  questsCompleted: 0,
+  achievements: [],
+  visitedBiomes: ['ocean'],
 };
 
 let isCasting = false;
@@ -2820,6 +2942,7 @@ function doCast() {
         });
         const eaten = before - state.inventory.length;
         state.money = Math.max(0, state.money - 500);
+        state._survivedShark = true;
         showSharkModal(eaten);
       } else if (fish.dolphin) {
         // Dolphin: show fine modal
@@ -2854,8 +2977,20 @@ function doCast() {
         state.money += bonus;
       }
 
+      // Screen flash for legendary+
+      if (['legendary','mythic','ancient','godlike','mythical'].includes(fish.rarity)) {
+        triggerScreenFlash();
+      }
+
+      // Track mutation for achievements
+      if (lastMutation) state._hadMutation = true;
+
       playCatchSound(fish.rarity);
       displayCatch(fish, lastMutation);
+
+      // Quest + Achievement tracking
+      checkQuestProgress({ type: 'catch', rarity: fish.rarity, mutated: !!lastMutation });
+      checkAchievements();
     }
 
     // Track recent catches for all types
@@ -2915,6 +3050,8 @@ function doSell() {
     </div>`;
 
   showToast(`Sold fish for $${totalEarnings.toLocaleString()}!`);
+  checkQuestProgress({ type: 'sell', earnings: totalEarnings });
+  checkAchievements();
   updateUI();
   saveGame();
   submitScore();
@@ -2930,6 +3067,7 @@ function buyRod(rodId) {
     state.equippedRod = rodId;
     showToast(`Purchased ${rod.name}!`);
   }
+  checkAchievements();
   updateUI();
   saveGame();
   submitScore();
@@ -3151,6 +3289,12 @@ function updateUI() {
 
   // Biomes
   renderBiomeGrid();
+
+  // Quests + Achievements
+  renderQuests();
+  renderAchievements();
+  const achCount = document.getElementById('ach-count');
+  if (achCount) achCount.textContent = `(${state.achievements.length}/${ACHIEVEMENTS.length})`;
 }
 
 function updateTraderInventory() {
@@ -3462,6 +3606,10 @@ function saveGame() {
     fishTowardNextLevel: state.fishTowardNextLevel,
     rank: state.rank,
     currentBiome: state.currentBiome,
+    quests: state.quests,
+    questsCompleted: state.questsCompleted,
+    achievements: state.achievements,
+    visitedBiomes: state.visitedBiomes,
   };
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -3486,9 +3634,181 @@ function loadGame() {
     state.fishTowardNextLevel = data.fishTowardNextLevel ?? 0;
     state.rank = data.rank ?? { stage: 0, level: 0 };
     state.currentBiome = data.currentBiome ?? 'ocean';
+    state.quests = data.quests ?? [];
+    state.questsCompleted = data.questsCompleted ?? 0;
+    state.achievements = data.achievements ?? [];
+    state.visitedBiomes = data.visitedBiomes ?? ['ocean'];
   } catch (e) {
     // Corrupt save — start fresh
   }
+}
+
+// ================================================================
+// SCREEN FLASH
+// ================================================================
+
+function triggerScreenFlash() {
+  const flash = document.createElement('div');
+  flash.className = 'screen-flash';
+  document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 400);
+}
+
+// ================================================================
+// QUEST SYSTEM
+// ================================================================
+
+const QUEST_TEMPLATES = [
+  { type: 'catch_any',     make: () => { const n = [5,10,20,50][Math.floor(Math.random()*4)]; return { desc: `Catch ${n} fish`, target: n, reward: { money: n * 20 } }; }},
+  { type: 'catch_rare',    make: () => { const n = [3,5,10][Math.floor(Math.random()*3)]; return { desc: `Catch ${n} rare+ fish`, target: n, reward: { money: n * 100 } }; }},
+  { type: 'catch_epic',    make: () => { const n = [1,3,5][Math.floor(Math.random()*3)]; return { desc: `Catch ${n} epic+ fish`, target: n, reward: { money: n * 300 } }; }},
+  { type: 'earn_money',    make: () => { const n = [500,2000,10000][Math.floor(Math.random()*3)]; return { desc: `Earn $${n.toLocaleString()} from selling`, target: n, reward: { money: Math.round(n * 0.2) } }; }},
+  { type: 'catch_mutation', make: () => { const n = [1,3][Math.floor(Math.random()*2)]; return { desc: `Catch ${n} mutated fish`, target: n, reward: { money: n * 500 } }; }},
+];
+
+let questIdCounter = Date.now();
+
+function generateQuest() {
+  const tmpl = QUEST_TEMPLATES[Math.floor(Math.random() * QUEST_TEMPLATES.length)];
+  const q = tmpl.make();
+  return { id: questIdCounter++, type: tmpl.type, desc: q.desc, target: q.target, progress: 0, reward: q.reward };
+}
+
+function initQuests() {
+  while (state.quests.length < 3) state.quests.push(generateQuest());
+}
+
+const RARITY_TIERS = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4, mythic: 5, ancient: 6, godlike: 7, mythical: 8 };
+
+function checkQuestProgress(event) {
+  let changed = false;
+  state.quests.forEach((q, i) => {
+    if (q.progress >= q.target) return;
+    let inc = 0;
+    if (q.type === 'catch_any' && event.type === 'catch') inc = 1;
+    if (q.type === 'catch_rare' && event.type === 'catch' && (RARITY_TIERS[event.rarity] || 0) >= 2) inc = 1;
+    if (q.type === 'catch_epic' && event.type === 'catch' && (RARITY_TIERS[event.rarity] || 0) >= 3) inc = 1;
+    if (q.type === 'earn_money' && event.type === 'sell') inc = event.earnings;
+    if (q.type === 'catch_mutation' && event.type === 'catch' && event.mutated) inc = 1;
+    if (inc > 0) {
+      q.progress = Math.min(q.target, q.progress + inc);
+      changed = true;
+      if (q.progress >= q.target) completeQuest(i);
+    }
+  });
+  if (changed) { saveGame(); updateUI(); }
+}
+
+function completeQuest(index) {
+  const q = state.quests[index];
+  if (q.reward.money) state.money += q.reward.money;
+  state.questsCompleted++;
+  showQuestCompleteToast(q);
+  state.quests[index] = generateQuest();
+  checkAchievements();
+}
+
+function showQuestCompleteToast(quest) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast toast-levelup';
+  toast.innerHTML = `✅ Quest Complete: <strong>${quest.desc}</strong> — +$${quest.reward.money.toLocaleString()}`;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3500);
+}
+
+function renderQuests() {
+  const container = document.getElementById('quest-list');
+  if (!container) return;
+  container.innerHTML = state.quests.map(q => {
+    const pct = Math.min(100, (q.progress / q.target) * 100);
+    return `
+      <div class="quest-card">
+        <div class="quest-card-header">
+          <span class="quest-desc">${q.desc}</span>
+          <span class="quest-reward">+$${q.reward.money.toLocaleString()}</span>
+        </div>
+        <div class="quest-bar"><div class="quest-bar-fill" style="width:${pct}%"></div></div>
+        <div class="quest-progress-text">${q.progress} / ${q.target}</div>
+      </div>`;
+  }).join('');
+}
+
+// ================================================================
+// ACHIEVEMENT SYSTEM
+// ================================================================
+
+const ACHIEVEMENTS = [
+  { id: 'first_fish',      name: 'First Catch',      desc: 'Catch your first fish',       icon: '🎣' },
+  { id: 'fish_100',        name: 'Century Fisher',    desc: 'Catch 100 fish total',        icon: '💯' },
+  { id: 'fish_1000',       name: 'Fishing Machine',   desc: 'Catch 1,000 fish total',      icon: '🏭' },
+  { id: 'first_legendary', name: 'Golden Hook',       desc: 'Catch a legendary fish',      icon: '✨' },
+  { id: 'first_mythical',  name: 'Beyond Legends',    desc: 'Catch a mythical fish',       icon: '🌌' },
+  { id: 'first_godlike',   name: 'Godlike Angler',    desc: 'Catch a godlike fish',        icon: '🔥' },
+  { id: 'first_mutation',  name: 'Mutant Catcher',    desc: 'Catch a mutated fish',        icon: '🧬' },
+  { id: 'money_10k',       name: 'Big Spender',       desc: 'Have $10,000 at once',        icon: '💰' },
+  { id: 'money_100k',      name: 'Fishing Tycoon',    desc: 'Have $100,000 at once',       icon: '🏦' },
+  { id: 'money_1m',        name: 'Millionaire',       desc: 'Have $1,000,000 at once',     icon: '👑' },
+  { id: 'all_rods',        name: 'Rod Collector',     desc: 'Own all rods',                icon: '🎣' },
+  { id: 'quest_10',        name: 'Quest Hunter',      desc: 'Complete 10 quests',          icon: '📜' },
+  { id: 'biome_all',       name: 'World Explorer',    desc: 'Visit all biomes',            icon: '🌍' },
+  { id: 'fish_shark',      name: 'Shark Survivor',    desc: 'Survive a shark attack',      icon: '🦈' },
+];
+
+function checkAchievements() {
+  const checks = {
+    first_fish:      () => state.totalFishCaught >= 1,
+    fish_100:        () => state.totalFishCaught >= 100,
+    fish_1000:       () => state.totalFishCaught >= 1000,
+    first_legendary: () => state.bestCatchId >= 0 && (RARITY_TIERS[FISH_BY_ID[state.bestCatchId]?.rarity] || 0) >= 4,
+    first_mythical:  () => state.bestCatchId >= 0 && (RARITY_TIERS[FISH_BY_ID[state.bestCatchId]?.rarity] || 0) >= 8,
+    first_godlike:   () => state.bestCatchId >= 0 && (RARITY_TIERS[FISH_BY_ID[state.bestCatchId]?.rarity] || 0) >= 7,
+    first_mutation:  () => state._hadMutation,
+    money_10k:       () => state.money >= 10000,
+    money_100k:      () => state.money >= 100000,
+    money_1m:        () => state.money >= 1000000,
+    all_rods:        () => state.ownedRods.length >= RODS.length,
+    quest_10:        () => state.questsCompleted >= 10,
+    biome_all:       () => state.visitedBiomes.length >= BIOMES.length,
+    fish_shark:      () => state._survivedShark,
+  };
+
+  ACHIEVEMENTS.forEach(ach => {
+    if (state.achievements.includes(ach.id)) return;
+    const check = checks[ach.id];
+    if (check && check()) unlockAchievement(ach.id);
+  });
+}
+
+function unlockAchievement(id) {
+  if (state.achievements.includes(id)) return;
+  state.achievements.push(id);
+  const ach = ACHIEVEMENTS.find(a => a.id === id);
+  if (ach) {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = 'toast toast-achievement';
+    toast.innerHTML = `🏆 Achievement: <strong>${ach.icon} ${ach.name}</strong>`;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3500);
+    playLevelUpSound();
+  }
+  saveGame();
+  updateUI();
+}
+
+function renderAchievements() {
+  const container = document.getElementById('achievement-grid');
+  if (!container) return;
+  container.innerHTML = ACHIEVEMENTS.map(ach => {
+    const unlocked = state.achievements.includes(ach.id);
+    return `
+      <div class="achievement-badge ${unlocked ? 'unlocked' : ''}">
+        <span class="ach-icon">${ach.icon}</span>
+        <div class="ach-name">${ach.name}</div>
+        <div class="ach-desc">${ach.desc}</div>
+      </div>`;
+  }).join('');
 }
 
 // ================================================================
@@ -3522,8 +3842,10 @@ function setBiome(biomeId) {
     return;
   }
   state.currentBiome = biomeId;
+  if (!state.visitedBiomes.includes(biomeId)) state.visitedBiomes.push(biomeId);
   applyBiomeTheme(biomeId);
   showToast(`${biome.emoji} Switched to ${biome.name}`);
+  checkAchievements();
   saveGame();
   updateUI();
 }
@@ -4317,6 +4639,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load saved game
   loadGame();
   applyBiomeTheme(state.currentBiome);
+  initQuests();
   updateUI();
 
   // Weather system
