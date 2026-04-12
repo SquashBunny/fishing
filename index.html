@@ -908,6 +908,24 @@ body::before {
 .bait-equip-btn:hover:not(:disabled) { filter: brightness(1.1); }
 
 /* Level-up toast */
+.toast-broadcast {
+  background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.05));
+  border-color: var(--danger) !important;
+  color: #fff;
+  font-size: 1.05rem;
+  padding: 16px 28px !important;
+  box-shadow: 0 8px 32px rgba(239, 68, 68, 0.4) !important;
+  animation: toastIn 0.3s ease, broadcastPulse 2s ease infinite, toastOut 0.4s ease 5.6s forwards;
+  max-width: 400px;
+  white-space: normal;
+  text-align: center;
+}
+
+@keyframes broadcastPulse {
+  0%, 100% { box-shadow: 0 8px 32px rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 12px 48px rgba(239, 68, 68, 0.7); }
+}
+
 .toast-levelup {
   background: linear-gradient(135deg, rgba(251,191,36,0.15), rgba(251,191,36,0.05));
   border-color: var(--warning) !important;
@@ -3432,22 +3450,30 @@ async function sendChatMessage() {
 async function adminSendGlobalMessage(text) {
   if (!text || !firebaseReady) return;
   try {
+    // Post to chat
     await db.collection('chat').add({
       name: '[ADMIN]',
       text: text.slice(0, 200),
       admin: true,
       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
     });
-    showToast('Global message sent');
+    // Post to broadcasts — triggers on-screen toast for ALL players
+    await db.collection('broadcasts').add({
+      text: text.slice(0, 200),
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    showToast('Broadcast sent to all players');
   } catch (e) {}
 }
+
+let broadcastSeenIds = new Set();
 
 function initChat() {
   if (!firebaseReady) {
     document.getElementById('chat-messages').innerHTML = '<div class="chat-empty">Chat unavailable</div>';
     return;
   }
-  // Real-time listener
+  // Real-time chat listener
   chatUnsubscribe = db.collection('chat')
     .orderBy('timestamp', 'desc')
     .limit(30)
@@ -3457,6 +3483,29 @@ function initChat() {
     }, () => {
       document.getElementById('chat-messages').innerHTML = '<div class="chat-empty">Chat unavailable</div>';
     });
+
+  // Real-time broadcast listener — shows admin messages as toasts on ALL screens
+  db.collection('broadcasts')
+    .orderBy('timestamp', 'desc')
+    .limit(1)
+    .onSnapshot(snap => {
+      snap.docChanges().forEach(change => {
+        if (change.type === 'added' && !broadcastSeenIds.has(change.doc.id)) {
+          broadcastSeenIds.add(change.doc.id);
+          const data = change.doc.data();
+          if (data.text) showBroadcast(data.text);
+        }
+      });
+    }, () => {});
+}
+
+function showBroadcast(text) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast toast-broadcast';
+  toast.innerHTML = `📢 <strong>${escapeHTML(text)}</strong>`;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 6000);
 }
 
 function renderChatMessages(messages) {
