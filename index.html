@@ -928,6 +928,61 @@ body::before {
   50% { text-shadow: 0 0 16px currentColor, 0 0 28px currentColor; }
 }
 
+/* ========== LEADERBOARD ========== */
+.lb-section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--text);
+}
+
+.lb-list { display: flex; flex-direction: column; gap: 4px; }
+
+.lb-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--bg-mid);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  gap: 10px;
+}
+
+.lb-row.highlight {
+  border: 1px solid var(--accent);
+  background: rgba(59, 158, 255, 0.08);
+}
+
+.lb-rank {
+  font-weight: 700;
+  color: var(--text-dim);
+  min-width: 26px;
+  text-align: center;
+}
+
+.lb-row:nth-child(1) .lb-rank { color: #fbbf24; }
+.lb-row:nth-child(2) .lb-rank { color: #cbd5e1; }
+.lb-row:nth-child(3) .lb-rank { color: #b45309; }
+
+.lb-name { flex: 1; font-weight: 500; }
+.lb-score { font-weight: 700; color: var(--success); }
+.lb-loading { color: var(--text-dim); font-size: 0.85rem; text-align: center; padding: 12px; }
+.lb-empty { color: var(--text-dim); font-size: 0.85rem; text-align: center; padding: 12px; }
+
+.lb-refresh-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  background: var(--bg-mid);
+  color: var(--text-dim);
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lb-refresh-btn:hover { background: var(--bg-card-hover); color: var(--text); }
+
 /* ========== INVENTORY FULL WARNING ========== */
 .inv-warning {
   background: rgba(231, 76, 60, 0.12);
@@ -1120,6 +1175,7 @@ body::before {
     <button class="tab-btn" data-tab="shop">Rod Shop</button>
     <button class="tab-btn" data-tab="bait">Bait</button>
     <button class="tab-btn" data-tab="cache">Cache</button>
+    <button class="tab-btn" data-tab="leaderboard">Leaderboard</button>
   </div>
 
   <!-- ======== OCEAN PANEL ======== -->
@@ -1193,6 +1249,43 @@ body::before {
       </p>
       <div id="cache-content"></div>
     </div>
+  </div>
+</div>
+
+  <!-- ======== LEADERBOARD PANEL ======== -->
+  <div class="tab-panel" id="panel-leaderboard">
+    <div class="panel-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h2>Global Leaderboards</h2>
+        <button class="lb-refresh-btn" id="lb-refresh-btn" onclick="refreshLeaderboards()">Refresh</button>
+      </div>
+      <div id="lb-player-name" style="font-size:0.82rem;color:var(--text-dim);margin-bottom:16px;"></div>
+      <div class="lb-section">
+        <h3 class="lb-section-title">🐟 Total Fish Caught</h3>
+        <div class="lb-list" id="lb-fish-list">
+          <div class="lb-loading">Loading...</div>
+        </div>
+      </div>
+      <div class="lb-section" style="margin-top:20px;">
+        <h3 class="lb-section-title">💰 Total Money</h3>
+        <div class="lb-list" id="lb-money-list">
+          <div class="lb-loading">Loading...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Username prompt modal -->
+<div class="modal-overlay" id="username-modal" style="display:none;">
+  <div class="modal-box" style="border-color:var(--accent);">
+    <span class="modal-emoji" style="font-size:2.5rem;">🎣</span>
+    <div class="modal-title" style="color:var(--accent);">Welcome to Abyssal Tides!</div>
+    <div class="modal-text">Choose a name for the leaderboard:</div>
+    <input type="text" id="username-input" maxlength="20" placeholder="Your name..."
+      style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:8px;background:var(--bg-mid);color:var(--text);font-size:1rem;margin-bottom:16px;outline:none;text-align:center;"
+    />
+    <button class="modal-btn" style="background:var(--accent);" id="username-submit-btn">Start Fishing</button>
   </div>
 </div>
 
@@ -2139,6 +2232,7 @@ function doSell() {
   showToast(`Sold fish for $${totalEarnings.toLocaleString()}!`);
   updateUI();
   saveGame();
+  submitScore();
 }
 
 function buyRod(rodId) {
@@ -2701,14 +2795,179 @@ function loadGame() {
 // INITIALIZATION
 // ================================================================
 
-document.addEventListener('DOMContentLoaded', () => {
+// ================================================================
+// FIREBASE LEADERBOARD
+// ================================================================
+
+/**
+ * ⚠️ FIREBASE CONFIG — Replace these values with your own Firebase project config.
+ * Go to https://console.firebase.google.com → Create project → Web app → Copy config.
+ */
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+};
+
+let firebaseReady = false;
+let db = null;
+let playerName = localStorage.getItem('abyssalTidesPlayerName') || '';
+let lastSubmitTime = 0;
+
+/** Load Firebase SDK dynamically from CDN, then init. */
+async function initFirebase() {
+  if (firebaseConfig.apiKey === 'YOUR_API_KEY') {
+    renderLeaderboardError('Firebase not configured. Set your config in the code.');
+    return;
+  }
+  try {
+    // Firebase compat SDK (works in single HTML file without bundlers)
+    await loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
+    await loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js');
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    firebaseReady = true;
+    refreshLeaderboards();
+  } catch (e) {
+    renderLeaderboardError('Failed to connect to leaderboard service.');
+  }
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+/** Submit or update the player's score in Firestore. Throttled to once per 5 seconds. */
+async function submitScore() {
+  if (!firebaseReady || !playerName) return;
+  const now = Date.now();
+  if (now - lastSubmitTime < 5000) return;
+  lastSubmitTime = now;
+
+  try {
+    await db.collection('leaderboard').doc(playerName).set({
+      name: playerName,
+      fish: state.totalFishCaught,
+      money: state.money,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+  } catch (e) {}
+}
+
+/** Fetch top 10 players sorted by fish caught. */
+async function loadFishLeaderboard() {
+  if (!firebaseReady) return [];
+  try {
+    const snap = await db.collection('leaderboard').orderBy('fish', 'desc').limit(10).get();
+    return snap.docs.map(d => d.data());
+  } catch (e) { return []; }
+}
+
+/** Fetch top 10 players sorted by money. */
+async function loadMoneyLeaderboard() {
+  if (!firebaseReady) return [];
+  try {
+    const snap = await db.collection('leaderboard').orderBy('money', 'desc').limit(10).get();
+    return snap.docs.map(d => d.data());
+  } catch (e) { return []; }
+}
+
+/** Fetch both leaderboards and render them. */
+async function refreshLeaderboards() {
+  if (!firebaseReady) return;
+  document.getElementById('lb-fish-list').innerHTML = '<div class="lb-loading">Loading...</div>';
+  document.getElementById('lb-money-list').innerHTML = '<div class="lb-loading">Loading...</div>';
+
+  const [fishData, moneyData] = await Promise.all([loadFishLeaderboard(), loadMoneyLeaderboard()]);
+  renderLeaderboard('lb-fish-list', fishData, 'fish');
+  renderLeaderboard('lb-money-list', moneyData, 'money');
+}
+
+/** Render a leaderboard list into a container. */
+function renderLeaderboard(containerId, data, field) {
+  const container = document.getElementById(containerId);
+  if (!data || data.length === 0) {
+    container.innerHTML = '<div class="lb-empty">No scores yet — be the first!</div>';
+    return;
+  }
+
+  container.innerHTML = data.map((entry, i) => {
+    const isMe = entry.name === playerName;
+    const score = field === 'money' ? `$${(entry[field] || 0).toLocaleString()}` : (entry[field] || 0).toLocaleString();
+    return `
+      <div class="lb-row ${isMe ? 'highlight' : ''}">
+        <span class="lb-rank">#${i + 1}</span>
+        <span class="lb-name">${escapeHTML(entry.name || 'Unknown')}${isMe ? ' (you)' : ''}</span>
+        <span class="lb-score">${score}</span>
+      </div>`;
+  }).join('');
+}
+
+function renderLeaderboardError(msg) {
+  document.getElementById('lb-fish-list').innerHTML = `<div class="lb-empty">${msg}</div>`;
+  document.getElementById('lb-money-list').innerHTML = `<div class="lb-empty">${msg}</div>`;
+}
+
+function escapeHTML(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/** Show username prompt if no name is stored. */
+function promptUsername() {
+  return new Promise(resolve => {
+    if (playerName) {
+      document.getElementById('lb-player-name').textContent = `Playing as: ${playerName}`;
+      resolve();
+      return;
+    }
+    const modal = document.getElementById('username-modal');
+    const input = document.getElementById('username-input');
+    const btn = document.getElementById('username-submit-btn');
+    modal.style.display = 'flex';
+    input.focus();
+
+    function submit() {
+      const name = input.value.trim().slice(0, 20);
+      if (!name) return;
+      playerName = name;
+      localStorage.setItem('abyssalTidesPlayerName', playerName);
+      document.getElementById('lb-player-name').textContent = `Playing as: ${playerName}`;
+      modal.style.display = 'none';
+      resolve();
+    }
+
+    btn.addEventListener('click', submit);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+  });
+}
+
+// ================================================================
+// INITIALIZATION
+// ================================================================
+
+document.addEventListener('DOMContentLoaded', async () => {
   // Load saved game
   loadGame();
   updateUI();
 
+  // Username prompt + Firebase init
+  await promptUsername();
+  initFirebase();
+
   // Tab buttons
   document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    btn.addEventListener('click', () => {
+      switchTab(btn.dataset.tab);
+      if (btn.dataset.tab === 'leaderboard') refreshLeaderboards();
+    });
   });
 
   // Cast button
