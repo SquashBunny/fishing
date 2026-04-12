@@ -1040,6 +1040,72 @@ body::before {
 
 .lb-refresh-btn:hover { background: var(--bg-card-hover); color: var(--text); }
 
+/* ========== PLAYER STATS ========== */
+.player-card {
+  background: var(--bg-mid);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 10px;
+  transition: all 0.15s;
+}
+
+.player-card.is-me {
+  border-color: var(--accent);
+  background: rgba(59, 158, 255, 0.06);
+  box-shadow: 0 0 12px rgba(59, 158, 255, 0.15);
+}
+
+.player-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.player-card-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.player-card-rank {
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.05);
+}
+
+.player-card-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.player-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  background: var(--bg-card);
+  border-radius: 8px;
+}
+
+.player-stat .stat-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+}
+
+.player-stat .stat-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.player-stat .stat-value.money-val { color: var(--success); }
+.player-stat .stat-value.fish-val { color: #fbbf24; }
+
 /* Hide sidebars on screens too narrow to fit them */
 @media (max-width: 1200px) {
   .lb-sidebar { display: none; }
@@ -1237,6 +1303,7 @@ body::before {
     <button class="tab-btn" data-tab="shop">Rod Shop</button>
     <button class="tab-btn" data-tab="bait">Bait</button>
     <button class="tab-btn" data-tab="cache">Cache</button>
+    <button class="tab-btn" data-tab="players">Players</button>
   </div>
 
   <!-- ======== OCEAN PANEL ======== -->
@@ -1311,9 +1378,19 @@ body::before {
       <div id="cache-content"></div>
     </div>
   </div>
-</div>
 
-
+  <!-- ======== PLAYERS PANEL ======== -->
+  <div class="tab-panel" id="panel-players">
+    <div class="panel-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h2>All Players</h2>
+        <button class="lb-refresh-btn" onclick="loadPlayerStats()">Refresh</button>
+      </div>
+      <div id="player-stats-list">
+        <div class="lb-loading">Loading...</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ======== SIDEBAR LEADERBOARDS (always visible) ======== -->
@@ -2916,10 +2993,17 @@ async function submitScore() {
   lastSubmitTime = now;
 
   try {
+    const bestFish = state.bestCatchId >= 0 ? FISH_BY_ID[state.bestCatchId] : null;
     await db.collection('leaderboard').doc(playerName).set({
       name: playerName,
       fish: state.totalFishCaught,
       money: state.money,
+      bestCatchName: bestFish ? bestFish.name : 'None',
+      bestCatchRarity: bestFish ? bestFish.rarity : 'common',
+      bestCatchValue: bestFish ? bestFish.value : 0,
+      rank: rankString(state.rank),
+      rankStage: state.rank.stage,
+      rod: RODS[state.equippedRod].name,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
   } catch (e) {}
@@ -2979,6 +3063,70 @@ function renderLeaderboardError(msg) {
   document.getElementById('lb-money-list').innerHTML = `<div class="lb-empty">${msg}</div>`;
 }
 
+/** Fetch all players sorted by fish (descending) and render stat cards. */
+async function loadPlayerStats() {
+  if (!firebaseReady) {
+    document.getElementById('player-stats-list').innerHTML = '<div class="lb-empty">Leaderboard not connected.</div>';
+    return;
+  }
+  document.getElementById('player-stats-list').innerHTML = '<div class="lb-loading">Loading players...</div>';
+  try {
+    const snap = await db.collection('leaderboard').orderBy('fish', 'desc').limit(20).get();
+    const players = snap.docs.map(d => d.data());
+    renderPlayerStats(players);
+  } catch (e) {
+    document.getElementById('player-stats-list').innerHTML = '<div class="lb-empty">Failed to load players.</div>';
+  }
+}
+
+/** Render player stat cards. */
+function renderPlayerStats(players) {
+  const container = document.getElementById('player-stats-list');
+  if (!players || players.length === 0) {
+    container.innerHTML = '<div class="lb-empty">No players yet — be the first!</div>';
+    return;
+  }
+
+  const rarityColorMap = {
+    common: 'var(--common)', uncommon: 'var(--uncommon)', rare: 'var(--rare)',
+    epic: 'var(--epic)', legendary: 'var(--legendary)', mythic: 'var(--mythic)',
+    ancient: 'var(--ancient)', godlike: 'var(--godlike)', mythical: 'var(--mythical)',
+  };
+
+  container.innerHTML = players.map((p, i) => {
+    const isMe = p.name === playerName;
+    const bestColor = rarityColorMap[p.bestCatchRarity] || 'var(--text)';
+    const bestCatch = p.bestCatchName || 'None';
+    const bestVal = p.bestCatchValue ? `$${p.bestCatchValue.toLocaleString()}` : '-';
+
+    return `
+      <div class="player-card ${isMe ? 'is-me' : ''}">
+        <div class="player-card-header">
+          <span class="player-card-name">#${i+1} ${escapeHTML(p.name || 'Unknown')}${isMe ? ' (you)' : ''}</span>
+          <span class="player-card-rank" style="color:${bestColor}">${escapeHTML(p.rank || 'Bronze 1')}</span>
+        </div>
+        <div class="player-card-stats">
+          <div class="player-stat">
+            <span class="stat-label">Fish Caught</span>
+            <span class="stat-value fish-val">${(p.fish || 0).toLocaleString()}</span>
+          </div>
+          <div class="player-stat">
+            <span class="stat-label">Money</span>
+            <span class="stat-value money-val">$${(p.money || 0).toLocaleString()}</span>
+          </div>
+          <div class="player-stat">
+            <span class="stat-label">Best Catch</span>
+            <span class="stat-value" style="color:${bestColor}">${escapeHTML(bestCatch)}</span>
+          </div>
+          <div class="player-stat">
+            <span class="stat-label">Equipped Rod</span>
+            <span class="stat-value">${escapeHTML(p.rod || 'Wooden Rod')}</span>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
 function escapeHTML(str) {
   const div = document.createElement('div');
   div.textContent = str;
@@ -3027,7 +3175,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Tab buttons
   document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    btn.addEventListener('click', () => {
+      switchTab(btn.dataset.tab);
+      if (btn.dataset.tab === 'players') loadPlayerStats();
+    });
   });
 
   // Cast button
