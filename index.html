@@ -1124,6 +1124,15 @@ body::before {
 .player-stat .stat-value.money-val { color: var(--success); }
 .player-stat .stat-value.fish-val { color: #fbbf24; }
 
+.player-delete-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
 /* Hide sidebars on screens too narrow to fit them */
 @media (max-width: 1200px) {
   .lb-sidebar { display: none; }
@@ -3992,16 +4001,23 @@ function renderPlayerStats(players) {
     ancient: 'var(--ancient)', godlike: 'var(--godlike)', mythical: 'var(--mythical)',
   };
 
+  const isSuperAdmin = currentAdminRole === 'superadmin';
+
   container.innerHTML = players.map((p, i) => {
     const isMe = p.name === playerName;
     const bestColor = rarityColorMap[p.bestCatchRarity] || 'var(--text)';
     const bestCatch = p.bestCatchName || 'None';
-    const bestVal = p.bestCatchValue ? `$${p.bestCatchValue.toLocaleString()}` : '-';
+    const safeName = escapeHTML(p.name || 'Unknown');
+
+    const deleteBtn = (isSuperAdmin && !isMe) ? `
+      <div class="player-delete-row" id="player-del-${i}">
+        <button class="admin-btn red" style="font-size:0.75rem;padding:5px 10px;" onclick="confirmDeletePlayer('${safeName}', ${i})">Delete Account</button>
+      </div>` : '';
 
     return `
       <div class="player-card ${isMe ? 'is-me' : ''}">
         <div class="player-card-header">
-          <span class="player-card-name">#${i+1} ${escapeHTML(p.name || 'Unknown')}${isMe ? ' (you)' : ''}</span>
+          <span class="player-card-name">#${i+1} ${safeName}${isMe ? ' (you)' : ''}</span>
           <span class="player-card-rank" style="color:${bestColor}">${escapeHTML(p.rank || 'Bronze 1')}</span>
         </div>
         <div class="player-card-stats">
@@ -4022,8 +4038,30 @@ function renderPlayerStats(players) {
             <span class="stat-value">${escapeHTML(p.rod || 'Wooden Rod')}</span>
           </div>
         </div>
+        ${deleteBtn}
       </div>`;
   }).join('');
+}
+
+function confirmDeletePlayer(name, index) {
+  const row = document.getElementById(`player-del-${index}`);
+  row.innerHTML = `
+    <span style="font-size:0.82rem;color:var(--danger);font-weight:600;">Delete "${name}"?</span>
+    <button class="admin-btn red" style="font-size:0.75rem;padding:5px 10px;" onclick="deletePlayer('${name}')">Confirm</button>
+    <button class="admin-btn orange" style="font-size:0.75rem;padding:5px 10px;" onclick="loadPlayerStats()">Cancel</button>
+  `;
+}
+
+async function deletePlayer(name) {
+  if (!firebaseReady || currentAdminRole !== 'superadmin') return;
+  try {
+    await db.collection('leaderboard').doc(name).delete();
+    showToast(`Deleted account: ${name}`);
+    loadPlayerStats();
+    refreshLeaderboards();
+  } catch (e) {
+    showToast('Failed to delete account');
+  }
 }
 
 function escapeHTML(str) {
