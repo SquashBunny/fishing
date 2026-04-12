@@ -4133,7 +4133,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' && !e.repeat) {
+    const tag = document.activeElement?.tagName;
+    if (e.code === 'Space' && !e.repeat && tag !== 'INPUT' && tag !== 'TEXTAREA') {
       e.preventDefault();
       doCast();
     }
