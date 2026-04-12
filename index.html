@@ -2098,6 +2098,7 @@ const RANK_STAGES = [
   { name: 'Final Boss of Fishing',    color: '#fde68a', fishPerLevel: 25000, levels: 1, funny: true, emoji: '🔱', rainbow: true },
   // Super Admin only — not reachable through normal progression
   { name: 'Overpowered Lord Who Rules Over All Fish', color: '#ff0000', fishPerLevel: 999999, levels: 1, funny: true, emoji: '⚡', rainbow: true, adminOnly: true },
+  { name: 'GameDev', color: '#00ff88', fishPerLevel: 999999, levels: 1, funny: true, emoji: '🛠️', rainbow: true, adminOnly: true },
 ];
 const MAX_STAGE = RANK_STAGES.length - 1;
 
@@ -3232,11 +3233,20 @@ function adminUnlockEverything() {
 }
 
 function adminSetOverpowered() {
-  const opStage = RANK_STAGES.findIndex(s => s.adminOnly);
-  if (opStage === -1) return;
-  state.rank = { stage: opStage, level: 0 };
+  const idx = RANK_STAGES.findIndex(s => s.name === 'Overpowered Lord Who Rules Over All Fish');
+  if (idx === -1) return;
+  state.rank = { stage: idx, level: 0 };
   state.fishTowardNextLevel = 0;
   showToast(`⚡ You are now the Overpowered Lord!`);
+  saveGame(); updateUI(); submitScore();
+}
+
+function adminSetGameDev() {
+  const idx = RANK_STAGES.findIndex(s => s.name === 'GameDev');
+  if (idx === -1) return;
+  state.rank = { stage: idx, level: 0 };
+  state.fishTowardNextLevel = 0;
+  showToast(`🛠️ You are now a GameDev!`);
   saveGame(); updateUI(); submitScore();
 }
 
@@ -3370,6 +3380,7 @@ function renderAdminPanel(overlay) {
       <div class="admin-row">
         <button class="admin-btn red" onclick="adminMaxRank()">Max Rank</button>
         <button class="admin-btn red" onclick="adminSetOverpowered()">⚡ Overpowered Lord</button>
+        <button class="admin-btn red" onclick="adminSetGameDev()">🛠️ GameDev</button>
         <button class="admin-btn red" onclick="adminUnlockEverything()">Unlock Everything</button>
       </div>
       <div class="admin-row">
