@@ -1241,6 +1241,184 @@ body::before {
 
 .shake { animation: shake 0.4s ease; }
 
+/* ========== ADMIN PANEL ========== */
+.admin-gear-btn {
+  position: absolute;
+  top: 20px;
+  right: 0;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--text-dim);
+  transition: all 0.2s;
+  line-height: 1;
+}
+.admin-gear-btn:hover { color: var(--text); background: var(--bg-card-hover); }
+
+.admin-panel {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 0;
+  max-width: 480px;
+  width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+  animation: catchPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.admin-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg-card);
+  z-index: 1;
+  border-radius: 16px 16px 0 0;
+}
+
+.admin-panel-header h2 { font-size: 1.1rem; margin: 0; }
+
+.admin-role-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.admin-role-badge.mod { background: rgba(46,204,113,0.15); color: var(--success); }
+.admin-role-badge.adm { background: rgba(59,158,255,0.15); color: var(--accent); }
+.admin-role-badge.super { background: rgba(231,76,60,0.15); color: var(--danger); }
+
+.admin-logout-btn {
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-mid);
+  color: var(--text-dim);
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.admin-logout-btn:hover { background: rgba(231,76,60,0.15); color: var(--danger); }
+
+.admin-panel-body { padding: 16px 24px 24px; }
+
+.admin-section {
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  background: var(--bg-mid);
+  border-radius: 10px;
+  border-left: 3px solid var(--border);
+}
+
+.admin-section.mod-section { border-left-color: var(--success); }
+.admin-section.adm-section { border-left-color: var(--accent); }
+.admin-section.super-section { border-left-color: var(--danger); }
+
+.admin-section h3 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-section.mod-section h3 { color: var(--success); }
+.admin-section.adm-section h3 { color: var(--accent); }
+.admin-section.super-section h3 { color: var(--danger); }
+
+.admin-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-btn {
+  padding: 7px 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: #fff;
+}
+.admin-btn:hover { filter: brightness(1.15); }
+.admin-btn.green { background: #059669; }
+.admin-btn.blue { background: var(--accent); }
+.admin-btn.red { background: var(--danger); }
+.admin-btn.orange { background: #d97706; }
+
+.admin-input {
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 0.85rem;
+  width: 120px;
+  outline: none;
+}
+.admin-input:focus { border-color: var(--accent); }
+
+.admin-select {
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 0.85rem;
+  outline: none;
+  flex: 1;
+  min-width: 0;
+}
+.admin-select:focus { border-color: var(--accent); }
+
+.admin-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  font-size: 0.82rem;
+}
+
+.admin-stat {
+  padding: 6px 10px;
+  background: var(--bg-card);
+  border-radius: 6px;
+}
+
+.admin-stat .label { color: var(--text-dim); font-size: 0.72rem; text-transform: uppercase; }
+.admin-stat .val { font-weight: 700; margin-top: 2px; }
+
+.admin-mode-indicator {
+  position: fixed;
+  bottom: 12px;
+  right: 12px;
+  padding: 6px 14px;
+  background: rgba(231, 76, 60, 0.9);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  z-index: 50;
+  display: none;
+}
+
 /* ========== SCROLLBAR ========== */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -1257,10 +1435,14 @@ body::before {
 
 <div class="game-container">
   <!-- Header -->
-  <div class="header">
+  <div class="header" style="position:relative;">
     <h1>Abyssal Tides</h1>
     <div class="subtitle">What lurks beneath the waves?</div>
+    <button class="admin-gear-btn" id="admin-gear-btn" title="Settings">⚙️</button>
   </div>
+
+  <!-- Admin mode indicator -->
+  <div class="admin-mode-indicator" id="admin-mode-indicator">Admin Mode Active</div>
 
   <!-- Status Bar -->
   <div class="status-bar">
@@ -2931,8 +3113,275 @@ function loadGame() {
 }
 
 // ================================================================
-// INITIALIZATION
+// ADMIN PANEL SYSTEM
 // ================================================================
+
+let currentAdminRole = null;
+let adminOverlay = null;
+
+const ADMIN_PERMS = {
+  moderator: ['add_money_small', 'add_fish_small', 'view_stats'],
+  admin: ['add_money_small', 'add_fish_small', 'view_stats', 'set_money', 'set_fish', 'add_bait', 'unlock_rods', 'clear_inventory'],
+  superadmin: ['*'],
+};
+
+function hasPermission(perm) {
+  if (!currentAdminRole) return false;
+  const perms = ADMIN_PERMS[currentAdminRole];
+  return perms.includes('*') || perms.includes(perm);
+}
+
+function validateAdminCode(input) {
+  const codes = { 'xaMdoM': 'moderator', '7676nimda': 'admin', 'eikooByrT': 'superadmin' };
+  return codes[input.split('').reverse().join('')] || null;
+}
+
+const ROLE_LABELS = { moderator: 'Moderator', admin: 'Admin', superadmin: 'Super Admin' };
+const ROLE_CSS = { moderator: 'mod', admin: 'adm', superadmin: 'super' };
+const ROLE_COLORS = { moderator: 'green', admin: 'blue', superadmin: 'red' };
+
+function adminAddMoney(amount) {
+  state.money += amount;
+  showToast(`+$${amount.toLocaleString()} added`);
+  saveGame(); updateUI(); submitScore();
+}
+
+function adminSetMoney(amount) {
+  state.money = Math.max(0, Math.round(amount));
+  showToast(`Money set to $${state.money.toLocaleString()}`);
+  saveGame(); updateUI(); submitScore();
+}
+
+function adminAddFish(count) {
+  for (let i = 0; i < count; i++) state.inventory.push(0);
+  state.totalFishCaught += count;
+  showToast(`+${count} Common Minnow added`);
+  saveGame(); updateUI(); submitScore();
+}
+
+function adminSetFishCount(count) {
+  state.totalFishCaught = Math.max(0, Math.round(count));
+  showToast(`Total fish set to ${state.totalFishCaught.toLocaleString()}`);
+  saveGame(); updateUI(); submitScore();
+}
+
+function adminAddBait(baitId, qty) {
+  state.baitInventory[baitId] = (state.baitInventory[baitId] || 0) + qty;
+  const bait = BAITS.find(b => b.id === baitId);
+  showToast(`+${qty} ${bait.name} added`);
+  saveGame(); updateUI(); submitScore();
+}
+
+function adminUnlockAllRods() {
+  RODS.forEach(r => { if (!state.ownedRods.includes(r.id)) state.ownedRods.push(r.id); });
+  showToast('All rods unlocked!');
+  saveGame(); updateUI(); submitScore();
+}
+
+function adminClearInventory() {
+  state.inventory = [];
+  state.recentCatches = [];
+  showToast('Inventory cleared');
+  saveGame(); updateUI(); submitScore();
+}
+
+function adminSetRank(stage, level) {
+  state.rank = { stage: Math.max(0, stage), level: Math.max(0, level) };
+  state.fishTowardNextLevel = 0;
+  showToast(`Rank set to ${rankString(state.rank)}`);
+  saveGame(); updateUI(); submitScore();
+}
+
+function adminMaxRank() {
+  state.rank = { stage: MAX_STAGE, level: RANK_STAGES[MAX_STAGE].levels - 1 };
+  state.fishTowardNextLevel = 0;
+  showToast(`Max rank: ${rankString(state.rank)}!`);
+  saveGame(); updateUI(); submitScore();
+}
+
+function adminForceCatch(fishId) {
+  const fish = FISH_BY_ID[fishId];
+  if (!fish || fish.junk) return;
+  state.inventory.push(fish.id);
+  if (state.bestCatchId === -1 || fish.value > FISH_BY_ID[state.bestCatchId].value) {
+    state.bestCatchId = fish.id;
+  }
+  state.totalFishCaught++;
+  state.recentCatches.unshift(fish.id);
+  if (state.recentCatches.length > 8) state.recentCatches.pop();
+  playCatchSound(fish.rarity);
+  displayCatch(fish);
+  showToast(`Force-caught ${fish.name}!`);
+  switchTab('ocean');
+  saveGame(); updateUI(); submitScore();
+}
+
+function adminUnlockEverything() {
+  adminUnlockAllRods();
+  BAITS.forEach(b => { state.baitInventory[b.id] += 100; });
+  state.rank = { stage: MAX_STAGE, level: RANK_STAGES[MAX_STAGE].levels - 1 };
+  state.fishTowardNextLevel = 0;
+  showToast('Everything unlocked!');
+  saveGame(); updateUI(); submitScore();
+}
+
+function adminResetGame() {
+  if (!confirm('Are you sure you want to RESET the entire game? This cannot be undone.')) return;
+  localStorage.removeItem(SAVE_KEY);
+  localStorage.removeItem('abyssalTidesPlayerName');
+  location.reload();
+}
+
+function openAdminPanel() {
+  closeAdminPanel();
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'admin-overlay';
+  adminOverlay = overlay;
+  if (currentAdminRole) { renderAdminPanel(overlay); } else { renderAdminLogin(overlay); }
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeAdminPanel(); });
+}
+
+function closeAdminPanel() {
+  if (adminOverlay) { adminOverlay.remove(); adminOverlay = null; }
+}
+
+function adminLogout() {
+  currentAdminRole = null;
+  document.getElementById('admin-mode-indicator').style.display = 'none';
+  closeAdminPanel();
+}
+
+function renderAdminLogin(overlay) {
+  overlay.innerHTML = `
+    <div class="admin-panel" style="max-width:360px;">
+      <div class="admin-panel-header"><h2>Admin Access</h2></div>
+      <div class="admin-panel-body" style="text-align:center;">
+        <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:16px;">Enter admin code to continue.</p>
+        <input type="password" id="admin-code-input" class="admin-input" style="width:100%;text-align:center;margin-bottom:12px;" placeholder="Enter code..." />
+        <div id="admin-login-error" style="color:var(--danger);font-size:0.82rem;margin-bottom:12px;display:none;">Invalid code</div>
+        <button class="admin-btn blue" id="admin-login-btn" style="width:100%;">Login</button>
+      </div>
+    </div>`;
+  const inp = overlay.querySelector('#admin-code-input');
+  const btn = overlay.querySelector('#admin-login-btn');
+  const err = overlay.querySelector('#admin-login-error');
+  setTimeout(() => inp.focus(), 100);
+  function tryLogin() {
+    const role = validateAdminCode(inp.value);
+    if (role) {
+      currentAdminRole = role;
+      document.getElementById('admin-mode-indicator').style.display = 'block';
+      renderAdminPanel(overlay);
+    } else { err.style.display = 'block'; inp.value = ''; inp.focus(); }
+  }
+  btn.addEventListener('click', tryLogin);
+  inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryLogin(); });
+}
+
+function renderAdminPanel(overlay) {
+  const role = currentAdminRole;
+  const css = ROLE_CSS[role];
+  const label = ROLE_LABELS[role];
+
+  const stats = `
+    <div class="admin-stats">
+      <div class="admin-stat"><div class="label">Money</div><div class="val" style="color:var(--success)">$${state.money.toLocaleString()}</div></div>
+      <div class="admin-stat"><div class="label">Total Fish</div><div class="val">${state.totalFishCaught.toLocaleString()}</div></div>
+      <div class="admin-stat"><div class="label">Net Worth</div><div class="val">$${getNetWorth().toLocaleString()}</div></div>
+      <div class="admin-stat"><div class="label">Rank</div><div class="val">${rankString(state.rank)}</div></div>
+      <div class="admin-stat"><div class="label">Luck</div><div class="val">+${getTotalLuck()}</div></div>
+      <div class="admin-stat"><div class="label">Inventory</div><div class="val">${state.inventory.length}/${MAX_INVENTORY}</div></div>
+    </div>`;
+
+  const modSection = `
+    <div class="admin-section mod-section">
+      <h3>🟢 Moderator</h3>
+      ${stats}
+      <div class="admin-row" style="margin-top:12px;">
+        <button class="admin-btn green" onclick="adminAddMoney(100)">+$100</button>
+        <button class="admin-btn green" onclick="adminAddMoney(1000)">+$1,000</button>
+        <button class="admin-btn green" onclick="adminAddFish(10)">+10 Fish</button>
+      </div>
+    </div>`;
+
+  const baitOpts = BAITS.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+  const admSection = hasPermission('set_money') ? `
+    <div class="admin-section adm-section">
+      <h3>🔵 Admin</h3>
+      <div class="admin-row">
+        <span style="font-size:0.82rem;color:var(--text-dim);min-width:70px;">Set Money</span>
+        <input type="number" class="admin-input" id="admin-set-money" placeholder="Amount" min="0"/>
+        <button class="admin-btn blue" onclick="adminSetMoney(Number(document.getElementById('admin-set-money').value))">Set</button>
+      </div>
+      <div class="admin-row">
+        <span style="font-size:0.82rem;color:var(--text-dim);min-width:70px;">Set Fish</span>
+        <input type="number" class="admin-input" id="admin-set-fish" placeholder="Count" min="0"/>
+        <button class="admin-btn blue" onclick="adminSetFishCount(Number(document.getElementById('admin-set-fish').value))">Set</button>
+      </div>
+      <div class="admin-row">
+        <span style="font-size:0.82rem;color:var(--text-dim);min-width:70px;">Add Bait</span>
+        <select class="admin-select" id="admin-bait-select">${baitOpts}</select>
+        <button class="admin-btn blue" onclick="adminAddBait(document.getElementById('admin-bait-select').value,50)">+50</button>
+      </div>
+      <div class="admin-row">
+        <button class="admin-btn blue" onclick="adminUnlockAllRods()">Unlock All Rods</button>
+        <button class="admin-btn orange" onclick="adminClearInventory()">Clear Inventory</button>
+      </div>
+    </div>` : '';
+
+  const rankOpts = RANK_STAGES.map((s, si) => {
+    let o = '';
+    for (let li = 0; li < s.levels; li++) {
+      const l = s.levels === 1 ? s.name : `${s.name} ${li+1}`;
+      o += `<option value="${si}-${li}">${l}</option>`;
+    }
+    return o;
+  }).join('');
+
+  const fishOpts = FISH.filter(f => !f.junk).map(f =>
+    `<option value="${f.id}">${f.name} ($${f.value.toLocaleString()}) — ${f.rarity}</option>`
+  ).join('');
+
+  const superSection = hasPermission('*') ? `
+    <div class="admin-section super-section">
+      <h3>🔴 Super Admin</h3>
+      <div class="admin-row">
+        <span style="font-size:0.82rem;color:var(--text-dim);min-width:70px;">Set Rank</span>
+        <select class="admin-select" id="admin-rank-select">${rankOpts}</select>
+        <button class="admin-btn red" onclick="const v=document.getElementById('admin-rank-select').value.split('-');adminSetRank(Number(v[0]),Number(v[1]))">Set</button>
+      </div>
+      <div class="admin-row">
+        <button class="admin-btn red" onclick="adminMaxRank()">Max Rank</button>
+        <button class="admin-btn red" onclick="adminUnlockEverything()">Unlock Everything</button>
+      </div>
+      <div class="admin-row">
+        <span style="font-size:0.82rem;color:var(--text-dim);min-width:70px;">Force Catch</span>
+        <select class="admin-select" id="admin-fish-select">${fishOpts}</select>
+        <button class="admin-btn red" onclick="adminForceCatch(Number(document.getElementById('admin-fish-select').value));closeAdminPanel();">Catch</button>
+      </div>
+      <div class="admin-row" style="margin-top:8px;">
+        <button class="admin-btn orange" onclick="adminResetGame()">Reset Game</button>
+      </div>
+    </div>` : '';
+
+  overlay.innerHTML = `
+    <div class="admin-panel">
+      <div class="admin-panel-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <h2>Admin Panel</h2>
+          <span class="admin-role-badge ${css}">${label}</span>
+        </div>
+        <button class="admin-logout-btn" onclick="adminLogout()">Logout</button>
+      </div>
+      <div class="admin-panel-body">
+        ${modSection}
+        ${admSection}
+        ${superSection}
+      </div>
+    </div>`;
+}
 
 // ================================================================
 // FIREBASE LEADERBOARD
@@ -3188,11 +3637,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Sell button
   document.getElementById('sell-btn').addEventListener('click', doSell);
 
-  // Keyboard shortcut — spacebar to cast
+  // Admin gear button
+  document.getElementById('admin-gear-btn').addEventListener('click', openAdminPanel);
+
+  // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
     if (e.code === 'Space' && !e.repeat) {
       e.preventDefault();
       doCast();
+    }
+    // Ctrl+Shift+A opens admin panel
+    if (e.ctrlKey && e.shiftKey && e.code === 'KeyA') {
+      e.preventDefault();
+      openAdminPanel();
     }
   });
 });
