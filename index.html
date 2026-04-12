@@ -3898,10 +3898,22 @@ function pickRandomWeather() {
 function changeWeather() {
   let next;
   do { next = pickRandomWeather(); } while (next.id === currentWeather.id && WEATHER_TYPES.length > 1);
-  currentWeather = next;
-  updateWeatherBar();
-  showToast(`${next.emoji} Weather changed: ${next.name}`);
+  applyWeather(next);
+  // Push to Firebase so all tabs/players get the same weather
+  pushWeatherToFirebase(next.id);
   scheduleNextWeather();
+}
+
+function applyWeather(w) {
+  if (currentWeather.id === w.id) return;
+  currentWeather = w;
+  updateWeatherBar();
+  showToast(`${w.emoji} Weather changed: ${w.name}`);
+}
+
+function pushWeatherToFirebase(weatherId) {
+  if (!firebaseReady) return;
+  try { db.collection('global').doc('weather').set({ weatherId, timestamp: firebase.firestore.FieldValue.serverTimestamp() }); } catch (e) {}
 }
 
 function scheduleNextWeather() {
@@ -3923,22 +3935,14 @@ function updateWeatherBar() {
   }
 }
 
-async function adminForceWeather(weatherId) {
+function adminForceWeather(weatherId) {
   const w = WEATHER_TYPES.find(t => t.id === weatherId);
   if (!w) return;
   currentWeather = w;
   updateWeatherBar();
   showToast(`${w.emoji} Weather forced: ${w.name}`);
+  pushWeatherToFirebase(weatherId);
   scheduleNextWeather();
-  // Push to Firebase so all players get this weather
-  if (firebaseReady) {
-    try {
-      await db.collection('global').doc('weather').set({
-        weatherId: weatherId,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      });
-    } catch (e) {}
-  }
 }
 
 // ================================================================
@@ -4050,21 +4054,18 @@ function initChat() {
       });
     }, () => {});
 
-  // Real-time global weather listener — admin-forced weather syncs to all players
-  let initialWeatherLoad = true;
+  // Real-time global weather listener — syncs weather across all tabs/players
   db.collection('global').doc('weather')
     .onSnapshot(snap => {
       if (!snap.exists) return;
       const data = snap.data();
       if (!data.weatherId) return;
-      // Skip the first load so we don't overwrite local weather on page refresh
-      if (initialWeatherLoad) { initialWeatherLoad = false; return; }
       const w = WEATHER_TYPES.find(t => t.id === data.weatherId);
       if (w && currentWeather.id !== w.id) {
         currentWeather = w;
         updateWeatherBar();
         scheduleNextWeather();
-        showToast(`${w.emoji} Weather changed globally: ${w.name}`);
+        showToast(`${w.emoji} Weather: ${w.name}`);
       }
     }, () => {});
 }
