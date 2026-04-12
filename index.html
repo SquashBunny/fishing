@@ -699,6 +699,22 @@ body::before {
   animation: grandmasterPulse 2s ease-in-out infinite;
 }
 
+.rank-value.rank-funny {
+  text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+}
+
+.rank-value.rank-rainbow {
+  background: linear-gradient(90deg, #ef4444, #fbbf24, #4ade80, #22d3ee, #a855f7, #f472b6, #ef4444);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: godlikeRainbow 3s linear infinite;
+  font-weight: 700;
+  filter: none;
+  text-shadow: none;
+}
+
 .rank-progress-card {
   margin-top: 16px;
   padding: 14px 16px;
@@ -1644,16 +1660,31 @@ const BAITS = [
  * fishPerLevel is how many fish are needed to advance ONE level within that stage.
  */
 const RANK_STAGES = [
-  { name: 'Bronze',      color: '#b45309', fishPerLevel: 200  },
-  { name: 'Silver',      color: '#cbd5e1', fishPerLevel: 500  },
-  { name: 'Gold',        color: '#fbbf24', fishPerLevel: 750  },
-  { name: 'Diamond',     color: '#60a5fa', fishPerLevel: 1000 },
-  { name: 'Emerald',     color: '#10b981', fishPerLevel: 1500 },
-  { name: 'Master',      color: '#a855f7', fishPerLevel: 2000 },
-  { name: 'Grandmaster', color: '#f43f5e', fishPerLevel: 5000 },
+  // Serious tiers — 3 levels each
+  { name: 'Bronze',      color: '#b45309', fishPerLevel: 200,   levels: 3 },
+  { name: 'Silver',      color: '#cbd5e1', fishPerLevel: 500,   levels: 3 },
+  { name: 'Gold',        color: '#fbbf24', fishPerLevel: 750,   levels: 3 },
+  { name: 'Diamond',     color: '#60a5fa', fishPerLevel: 1000,  levels: 3 },
+  { name: 'Emerald',     color: '#10b981', fishPerLevel: 1500,  levels: 3 },
+  { name: 'Master',      color: '#a855f7', fishPerLevel: 2000,  levels: 3 },
+  { name: 'Grandmaster', color: '#f43f5e', fishPerLevel: 5000,  levels: 3 },
+  // Funny endgame ranks — 1 level each, escalating requirements
+  { name: 'History Club Member',       color: '#f472b6', fishPerLevel: 7500,  levels: 1, funny: true, emoji: '📜' },
+  { name: 'Certified Fish Enthusiast', color: '#fb923c', fishPerLevel: 8000,  levels: 1, funny: true, emoji: '🐟' },
+  { name: 'Professional Overfisher',   color: '#facc15', fishPerLevel: 9000,  levels: 1, funny: true, emoji: '🎣' },
+  { name: 'Ocean Manager',            color: '#4ade80', fishPerLevel: 10000, levels: 1, funny: true, emoji: '📊' },
+  { name: 'Fish Whisperer',           color: '#22d3ee', fishPerLevel: 11000, levels: 1, funny: true, emoji: '🤫' },
+  { name: 'CEO of Fishing',           color: '#60a5fa', fishPerLevel: 12500, levels: 1, funny: true, emoji: '💼' },
+  { name: 'Fishing Overlord',         color: '#818cf8', fishPerLevel: 14000, levels: 1, funny: true, emoji: '👹' },
+  { name: 'Aquarium Escapee',         color: '#c084fc', fishPerLevel: 15000, levels: 1, funny: true, emoji: '🏃' },
+  { name: 'Supreme Rod Wielder',      color: '#e879f9', fishPerLevel: 17000, levels: 1, funny: true, emoji: '⚔️' },
+  { name: 'Lord of the Bait',         color: '#f472b6', fishPerLevel: 18000, levels: 1, funny: true, emoji: '🪱' },
+  { name: 'The One Who Catches All',  color: '#fb7185', fishPerLevel: 20000, levels: 1, funny: true, emoji: '🌊' },
+  { name: 'Aquatic Legend',           color: '#fbbf24', fishPerLevel: 22000, levels: 1, funny: true, emoji: '🏆' },
+  { name: 'Fish God',                 color: '#fcd34d', fishPerLevel: 25000, levels: 1, funny: true, emoji: '👑', rainbow: true },
+  { name: 'Final Boss of Fishing',    color: '#fde68a', fishPerLevel: 25000, levels: 1, funny: true, emoji: '🔱', rainbow: true },
 ];
 const MAX_STAGE = RANK_STAGES.length - 1;
-const MAX_LEVEL = 2; // 0,1,2 = 1,2,3
 
 // ================================================================
 // GAME STATE
@@ -1836,9 +1867,11 @@ function catchFish() {
 // LEVELING SYSTEM
 // ================================================================
 
-/** Format a rank object as a display string: "Gold 2" */
+/** Format a rank object as a display string: "Gold 2" or "Fish God" */
 function rankString(rank) {
-  return `${RANK_STAGES[rank.stage].name} ${rank.level + 1}`;
+  const stage = RANK_STAGES[rank.stage];
+  if (stage.levels === 1) return stage.name;
+  return `${stage.name} ${rank.level + 1}`;
 }
 
 /** Returns true if the current rank is >= the required rank */
@@ -1854,9 +1887,10 @@ function isBaitUnlocked(bait) {
   return rankMeets(state.rank, bait.unlockRank);
 }
 
-/** True if the player is at the max rank (Grandmaster 3) */
+/** True if the player is at the final rank */
 function isMaxRank() {
-  return state.rank.stage === MAX_STAGE && state.rank.level === MAX_LEVEL;
+  const stage = RANK_STAGES[state.rank.stage];
+  return state.rank.stage === MAX_STAGE && state.rank.level === stage.levels - 1;
 }
 
 /** Fish required for the next level at the current stage */
@@ -1883,7 +1917,8 @@ function levelUp() {
   const wasLocked = BAITS.map(b => !isBaitUnlocked(b));
 
   // Advance
-  if (state.rank.level < MAX_LEVEL) {
+  const currentStage = RANK_STAGES[state.rank.stage];
+  if (state.rank.level < currentStage.levels - 1) {
     state.rank.level++;
   } else if (state.rank.stage < MAX_STAGE) {
     state.rank.stage++;
@@ -2469,9 +2504,12 @@ function updateCache() {
 function updateRankDisplay() {
   const el = document.getElementById('rank-display');
   const stage = RANK_STAGES[state.rank.stage];
-  el.textContent = rankString(state.rank);
-  el.style.color = stage.color;
-  el.classList.toggle('grandmaster-glow', state.rank.stage === MAX_STAGE);
+  const label = stage.emoji ? `${stage.emoji} ${rankString(state.rank)}` : rankString(state.rank);
+  el.textContent = label;
+  el.style.color = stage.rainbow ? '' : stage.color;
+  el.classList.toggle('grandmaster-glow', state.rank.stage >= 6 && !stage.rainbow);
+  el.classList.toggle('rank-rainbow', !!stage.rainbow);
+  el.classList.toggle('rank-funny', !!stage.funny);
 
   // Luck display in status bar
   const luckEl = document.getElementById('luck-display');
@@ -2488,7 +2526,7 @@ function updateRankProgress() {
     el.innerHTML = `
       <div class="rank-progress-card">
         <div class="rank-progress-top">
-          <span>🏆 <strong style="color:${stage.color}">Grandmaster 3</strong> — max rank</span>
+          <span>🏆 <strong style="color:${stage.color}">${stage.emoji || ''} ${rankString(state.rank)}</strong> — max rank</span>
           <span class="rank-fishcount">Total fish: ${state.totalFishCaught.toLocaleString()}</span>
         </div>
         <div class="rank-luck">Luck: +${luck}</div>
