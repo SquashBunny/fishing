@@ -1446,6 +1446,51 @@ body::before {
   display: none;
 }
 
+/* ========== BIOME SYSTEM ========== */
+.biome-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.biome-card {
+  padding: 14px 12px;
+  background: var(--bg-mid);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.biome-card:hover:not(.locked) { background: var(--bg-card-hover); transform: translateY(-2px); }
+
+.biome-card.active {
+  border-color: var(--accent);
+  background: rgba(59, 158, 255, 0.08);
+  box-shadow: 0 0 12px rgba(59, 158, 255, 0.2);
+}
+
+.biome-card.locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.biome-card .biome-emoji { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+.biome-card .biome-name { font-size: 0.85rem; font-weight: 600; }
+.biome-card .biome-unlock { font-size: 0.72rem; color: var(--text-dim); margin-top: 4px; }
+.biome-card .biome-fish-count { font-size: 0.7rem; color: var(--accent); margin-top: 2px; }
+
+/* Theme transitions */
+body, body::before, .game-container, .panel-card, .status-bar, .tab-nav, .tab-btn,
+.weather-bar, .lb-sidebar, .chat-bar {
+  transition: background 0.6s ease, border-color 0.6s ease, box-shadow 0.6s ease;
+}
+
+@media (max-width: 480px) {
+  .biome-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
 /* ========== WEATHER BAR ========== */
 .weather-bar {
   text-align: center;
@@ -1605,6 +1650,7 @@ body::before {
   .panel-card { padding: 16px; }
 }
 </style>
+<style id="biome-bg-style"></style>
 </head>
 <body>
 
@@ -1666,6 +1712,7 @@ body::before {
     <button class="tab-btn" data-tab="shop">Rod Shop</button>
     <button class="tab-btn" data-tab="bait">Bait</button>
     <button class="tab-btn" data-tab="cache">Cache</button>
+    <button class="tab-btn" data-tab="biomes">Biomes</button>
     <button class="tab-btn" data-tab="players">Players</button>
   </div>
 
@@ -1743,6 +1790,15 @@ body::before {
   </div>
 
   <!-- ======== PLAYERS PANEL ======== -->
+  <!-- ======== BIOMES PANEL ======== -->
+  <div class="tab-panel" id="panel-biomes">
+    <div class="panel-card">
+      <h2>Biomes</h2>
+      <p style="color:var(--text-dim);font-size:0.82rem;margin-bottom:16px;">Each biome has unique fish and changes the world's appearance.</p>
+      <div class="biome-grid" id="biome-grid"></div>
+    </div>
+  </div>
+
   <div class="tab-panel" id="panel-players">
     <div class="panel-card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
@@ -1857,6 +1913,95 @@ const FISH = [
  */
 const FISH_BY_ID = {};
 FISH.forEach(f => { FISH_BY_ID[f.id] = f; });
+
+// ================================================================
+// BIOME SYSTEM DATA
+// ================================================================
+
+const BIOMES = [
+  { id:'ocean',  name:'Ocean',        emoji:'🌊', unlock:0,
+    theme:{bgDeep:'#0a1628',bgMid:'#0f2035',bgCard:'#132a42',bgCardHover:'#183450',border:'#1e3a5f',accent:'#3b9eff'},
+    gradient:'radial-gradient(ellipse at 50% 0%,rgba(15,50,80,0.8)0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(10,40,90,0.4)0%,transparent 50%),radial-gradient(ellipse at 20% 60%,rgba(5,30,70,0.3)0%,transparent 50%)' },
+  { id:'jungle', name:'Jungle River',  emoji:'🌿', unlock:500,
+    theme:{bgDeep:'#0a1f0a',bgMid:'#102810',bgCard:'#1a3a1a',bgCardHover:'#224422',border:'#2d5a2d',accent:'#4ade80'},
+    gradient:'radial-gradient(ellipse at 50% 0%,rgba(10,60,20,0.8)0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(5,40,15,0.4)0%,transparent 50%),radial-gradient(ellipse at 20% 60%,rgba(8,30,10,0.3)0%,transparent 50%)' },
+  { id:'frozen', name:'Frozen Lake',   emoji:'❄️', unlock:2500,
+    theme:{bgDeep:'#0a1525',bgMid:'#102040',bgCard:'#152a4a',bgCardHover:'#1a3355',border:'#2a4a6a',accent:'#67e8f9'},
+    gradient:'radial-gradient(ellipse at 50% 0%,rgba(20,60,100,0.8)0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(15,40,80,0.4)0%,transparent 50%),radial-gradient(ellipse at 20% 60%,rgba(10,30,60,0.3)0%,transparent 50%)' },
+  { id:'lava',   name:'Lava Pools',    emoji:'🌋', unlock:10000,
+    theme:{bgDeep:'#1a0a0a',bgMid:'#2a1010',bgCard:'#3a1a1a',bgCardHover:'#442020',border:'#5a2a2a',accent:'#f97316'},
+    gradient:'radial-gradient(ellipse at 50% 100%,rgba(100,20,0,0.6)0%,transparent 60%),radial-gradient(ellipse at 20% 20%,rgba(60,10,5,0.4)0%,transparent 50%),radial-gradient(ellipse at 80% 50%,rgba(40,8,2,0.3)0%,transparent 50%)' },
+  { id:'void',   name:'Void Waters',   emoji:'🌌', unlock:50000,
+    theme:{bgDeep:'#0a0518',bgMid:'#120a25',bgCard:'#1a1035',bgCardHover:'#221540',border:'#2a1a50',accent:'#a855f7'},
+    gradient:'radial-gradient(ellipse at 50% 0%,rgba(40,10,80,0.7)0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(20,5,50,0.5)0%,transparent 50%),radial-gradient(ellipse at 20% 60%,rgba(15,3,40,0.3)0%,transparent 50%)' },
+  { id:'golden', name:'Golden Coast',  emoji:'🌅', unlock:25000,
+    theme:{bgDeep:'#1a1408',bgMid:'#251e0e',bgCard:'#332a14',bgCardHover:'#3d3318',border:'#4a3d20',accent:'#fbbf24'},
+    gradient:'radial-gradient(ellipse at 50% 0%,rgba(80,60,10,0.7)0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(60,40,5,0.4)0%,transparent 50%),radial-gradient(ellipse at 20% 60%,rgba(40,30,5,0.3)0%,transparent 50%)' },
+  { id:'swamp',  name:'Misty Swamp',   emoji:'🌫️', unlock:5000,
+    theme:{bgDeep:'#0f1510',bgMid:'#151f16',bgCard:'#1f2f20',bgCardHover:'#253828',border:'#2f4a30',accent:'#86efac'},
+    gradient:'radial-gradient(ellipse at 50% 100%,rgba(20,40,20,0.8)0%,transparent 60%),radial-gradient(ellipse at 30% 20%,rgba(15,30,15,0.5)0%,transparent 50%),radial-gradient(ellipse at 70% 60%,rgba(10,25,10,0.3)0%,transparent 50%)' },
+  { id:'storm',  name:'Storm Sea',     emoji:'⚡', unlock:15000,
+    theme:{bgDeep:'#08101a',bgMid:'#0c1828',bgCard:'#102038',bgCardHover:'#142842',border:'#1a3050',accent:'#818cf8'},
+    gradient:'radial-gradient(ellipse at 50% 0%,rgba(20,30,60,0.8)0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(10,15,40,0.5)0%,transparent 50%),radial-gradient(ellipse at 20% 60%,rgba(8,12,35,0.3)0%,transparent 50%)' },
+  { id:'cosmic', name:'Cosmic Ocean',  emoji:'🪐', unlock:100000,
+    theme:{bgDeep:'#050510',bgMid:'#0a0a1a',bgCard:'#12122a',bgCardHover:'#181832',border:'#1e1e40',accent:'#e879f9'},
+    gradient:'radial-gradient(ellipse at 50% 0%,rgba(30,10,50,0.7)0%,transparent 60%),radial-gradient(ellipse at 20% 80%,rgba(50,5,30,0.4)0%,transparent 50%),radial-gradient(ellipse at 80% 40%,rgba(20,5,40,0.3)0%,transparent 50%)' },
+];
+
+const BIOME_FISH = {
+  ocean: [],
+  jungle: [
+    { id:100, name:'Piranha',          emoji:'🦷', value:75,    rarity:'rare',      weight:120 },
+    { id:101, name:'Jungle Catfish',    emoji:'🐱', value:200,   rarity:'rare',      weight:50  },
+    { id:102, name:'Emerald Frog',      emoji:'���', value:800,   rarity:'epic',      weight:10  },
+    { id:103, name:'Ancient Arapaima',  emoji:'🐊', value:5000,  rarity:'legendary', weight:0.8 },
+  ],
+  frozen: [
+    { id:104, name:'Ice Pike',          emoji:'🧊', value:60,    rarity:'rare',      weight:130 },
+    { id:105, name:'Frost Salmon',      emoji:'🥶', value:300,   rarity:'rare',      weight:40  },
+    { id:106, name:'Glacier Eel',       emoji:'🌨️', value:1200,  rarity:'epic',      weight:8   },
+    { id:107, name:'Permafrost Whale',  emoji:'🐋', value:8000,  rarity:'legendary', weight:0.5 },
+  ],
+  lava: [
+    { id:108, name:'Magma Guppy',       emoji:'🌶️', value:80,    rarity:'rare',      weight:110 },
+    { id:109, name:'Fire Bass',          emoji:'🔥', value:350,   rarity:'rare',      weight:45  },
+    { id:110, name:'Obsidian Serpent',   emoji:'🖤', value:1500,  rarity:'epic',      weight:7   },
+    { id:111, name:'Inferno Leviathan',  emoji:'🌋', value:12000, rarity:'legendary', weight:0.3 },
+  ],
+  void: [
+    { id:112, name:'Void Minnow',       emoji:'👁️', value:100,   rarity:'rare',      weight:100 },
+    { id:113, name:'Shadow Ray',         emoji:'🦇', value:500,   rarity:'epic',      weight:20  },
+    { id:114, name:'Abyss Eel',          emoji:'🕳️', value:3000,  rarity:'legendary', weight:2   },
+    { id:115, name:'Shadow Leviathan',   emoji:'👾', value:50000, rarity:'mythic',    weight:0.05},
+  ],
+  golden: [
+    { id:116, name:'Sand Dollar Fish',   emoji:'🐚', value:90,    rarity:'rare',      weight:120 },
+    { id:117, name:'Golden Crab',        emoji:'🦀', value:400,   rarity:'rare',      weight:35  },
+    { id:118, name:'Sunfire Jellyfish',  emoji:'🪼', value:2000,  rarity:'epic',      weight:6   },
+    { id:119, name:'Treasure Marlin',    emoji:'🏆', value:15000, rarity:'legendary', weight:0.4 },
+  ],
+  swamp: [
+    { id:120, name:'Mudskipper',         emoji:'🐸', value:50,    rarity:'uncommon',  weight:200 },
+    { id:121, name:'Bog Lurker',         emoji:'🪱', value:250,   rarity:'rare',      weight:50  },
+    { id:122, name:'Swamp Dragon',       emoji:'🐲', value:1000,  rarity:'epic',      weight:9   },
+    { id:123, name:'Phantom Toad',       emoji:'👻', value:6000,  rarity:'legendary', weight:0.6 },
+  ],
+  storm: [
+    { id:124, name:'Thunder Mackerel',   emoji:'⚡', value:70,    rarity:'rare',      weight:130 },
+    { id:125, name:'Lightning Barracuda',emoji:'🌩️', value:450,   rarity:'rare',      weight:30  },
+    { id:126, name:'Stormcaller Squid',  emoji:'🦑', value:2500,  rarity:'epic',      weight:5   },
+    { id:127, name:'Tempest Kraken',     emoji:'🌪️', value:20000, rarity:'legendary', weight:0.2 },
+  ],
+  cosmic: [
+    { id:128, name:'Starfish Anomaly',   emoji:'⭐', value:150,   rarity:'rare',      weight:80  },
+    { id:129, name:'Nebula Jellyfish',   emoji:'🪼', value:600,   rarity:'epic',      weight:15  },
+    { id:130, name:'Comet Whale',        emoji:'☄️', value:5000,  rarity:'legendary', weight:1   },
+    { id:131, name:'Galaxy Serpent',     emoji:'🌌', value:100000,rarity:'mythical',  weight:0.01},
+  ],
+};
+
+// Register all biome fish in FISH_BY_ID
+Object.values(BIOME_FISH).flat().forEach(f => { FISH_BY_ID[f.id] = f; });
 
 /**
  * Custom SVG icons for each fish/item.
@@ -2321,6 +2466,7 @@ let state = {
   totalFishCaught: 0,     // lifetime counter (fish only, not junk)
   fishTowardNextLevel: 0, // resets on level up
   rank: { stage: 0, level: 0 }, // Bronze 1
+  currentBiome: 'ocean',
 };
 
 let isCasting = false;
@@ -2440,42 +2586,47 @@ function getTotalLuck() {
  * Junk weights stay fixed (not affected by rod or luck).
  * Dolphin/Shark only appear if net worth >= $1000.
  */
+/** Get the current fish pool: base fish + biome-specific fish */
+function getFishPool() {
+  const biomeFish = BIOME_FISH[state.currentBiome] || [];
+  return [...FISH, ...biomeFish];
+}
+
 function getAdjustedWeights() {
+  const pool = getFishPool();
   const rod = RODS[state.equippedRod];
   const netWorth = getNetWorth();
   const luck = getTotalLuck();
-  // Luck multiplies the rod's boost, but rods are the main source of power.
-  // +1 luck = +7.5%, +3 = +22.5%, +10 = +75% (1.75x), +20 (Master Bait) = 2.5x.
   const weatherBoost = currentWeather ? currentWeather.rarityBoost : 1;
   const luckMultiplier = rod.rarityBoost * (1 + luck * 0.075) * weatherBoost;
-  return FISH.map((fish, i) => {
-    // Dolphin and Shark require net worth >= 1000
+  return pool.map(fish => {
     if ((fish.dolphin || fish.shark) && netWorth < 1000) return 0;
-    // Junk items are not boosted by rods or luck
     if (fish.junk) return fish.weight;
-    if (i >= 3) return fish.weight * luckMultiplier;
+    // Boost all non-junk fish that aren't the 3 most common base fish
+    if (fish.rarity !== 'common' && fish.rarity !== 'uncommon') return fish.weight * luckMultiplier;
     return fish.weight;
   });
 }
 
 /** Calculate player's net worth (money + inventory value + cache value) */
 function getNetWorth() {
-  const invValue = state.inventory.reduce((sum, id) => sum + FISH_BY_ID[id].value, 0);
-  const cacheValue = state.cache.reduce((sum, id) => sum + FISH_BY_ID[id].value, 0);
+  const invValue = state.inventory.reduce((sum, id) => sum + (FISH_BY_ID[id]?.value || 0), 0);
+  const cacheValue = state.cache.reduce((sum, id) => sum + (FISH_BY_ID[id]?.value || 0), 0);
   return state.money + invValue + cacheValue;
 }
 
 /** Pick a random fish using weighted probability */
 function catchFish() {
+  const pool = getFishPool();
   const weights = getAdjustedWeights();
   const totalWeight = weights.reduce((sum, w) => sum + w, 0);
   let roll = Math.random() * totalWeight;
 
-  for (let i = 0; i < FISH.length; i++) {
+  for (let i = 0; i < pool.length; i++) {
     roll -= weights[i];
-    if (roll <= 0) return FISH[i];
+    if (roll <= 0) return pool[i];
   }
-  return FISH[0]; // fallback
+  return pool[0]; // fallback
 }
 
 // ================================================================
@@ -2997,6 +3148,9 @@ function updateUI() {
   updateBaitShop();
   updateBaitInventory();
   updateEquippedBaitDisplay();
+
+  // Biomes
+  renderBiomeGrid();
 }
 
 function updateTraderInventory() {
@@ -3307,6 +3461,7 @@ function saveGame() {
     totalFishCaught: state.totalFishCaught,
     fishTowardNextLevel: state.fishTowardNextLevel,
     rank: state.rank,
+    currentBiome: state.currentBiome,
   };
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -3330,9 +3485,66 @@ function loadGame() {
     state.totalFishCaught = data.totalFishCaught ?? 0;
     state.fishTowardNextLevel = data.fishTowardNextLevel ?? 0;
     state.rank = data.rank ?? { stage: 0, level: 0 };
+    state.currentBiome = data.currentBiome ?? 'ocean';
   } catch (e) {
     // Corrupt save — start fresh
   }
+}
+
+// ================================================================
+// BIOME FUNCTIONS
+// ================================================================
+
+function applyBiomeTheme(biomeId) {
+  const biome = BIOMES.find(b => b.id === biomeId);
+  if (!biome) return;
+  const t = biome.theme;
+  const root = document.documentElement;
+  root.style.setProperty('--bg-deep', t.bgDeep);
+  root.style.setProperty('--bg-mid', t.bgMid);
+  root.style.setProperty('--bg-card', t.bgCard);
+  root.style.setProperty('--bg-card-hover', t.bgCardHover);
+  root.style.setProperty('--border', t.border);
+  root.style.setProperty('--accent', t.accent);
+  root.style.setProperty('--accent-glow', t.accent + '4d');
+  // Update body background gradient
+  const beforeStyle = document.getElementById('biome-bg-style');
+  if (beforeStyle) {
+    beforeStyle.textContent = `body::before { background: ${biome.gradient}; }`;
+  }
+}
+
+function setBiome(biomeId) {
+  const biome = BIOMES.find(b => b.id === biomeId);
+  if (!biome) return;
+  if (biome.unlock > 0 && state.money < biome.unlock) {
+    showToast(`Need $${biome.unlock.toLocaleString()} to unlock ${biome.name}`);
+    return;
+  }
+  state.currentBiome = biomeId;
+  applyBiomeTheme(biomeId);
+  showToast(`${biome.emoji} Switched to ${biome.name}`);
+  saveGame();
+  updateUI();
+}
+
+function renderBiomeGrid() {
+  const container = document.getElementById('biome-grid');
+  container.innerHTML = BIOMES.map(biome => {
+    const isActive = state.currentBiome === biome.id;
+    const canAfford = state.money >= biome.unlock || biome.unlock === 0;
+    const isLocked = !canAfford && !isActive;
+    const fishCount = (BIOME_FISH[biome.id] || []).length;
+    const unlockText = biome.unlock === 0 ? 'Free' : isActive ? 'Active' : (canAfford ? 'Unlocked' : `$${biome.unlock.toLocaleString()}`);
+
+    return `
+      <div class="biome-card ${isActive ? 'active' : ''} ${isLocked ? 'locked' : ''}" onclick="${isLocked ? '' : `setBiome('${biome.id}')`}">
+        <span class="biome-emoji">${biome.emoji}</span>
+        <div class="biome-name">${biome.name}</div>
+        <div class="biome-fish-count">${fishCount > 0 ? fishCount + ' unique fish' : 'Base fish'}</div>
+        <div class="biome-unlock">${unlockText}</div>
+      </div>`;
+  }).join('');
 }
 
 // ================================================================
@@ -4104,6 +4316,7 @@ function promptUsername() {
 document.addEventListener('DOMContentLoaded', async () => {
   // Load saved game
   loadGame();
+  applyBiomeTheme(state.currentBiome);
   updateUI();
 
   // Weather system
