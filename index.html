@@ -800,6 +800,21 @@ body::before {
   margin-left: auto;
 }
 
+.bait-select {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+}
+.bait-select:focus { border-color: var(--accent); }
+.equipped-bait.none .bait-select { color: var(--text-dim); }
+
 .bait-list {
   display: flex;
   flex-direction: column;
@@ -3615,17 +3630,29 @@ function updateRankProgress() {
 
 function updateEquippedBaitDisplay() {
   const el = document.getElementById('equipped-bait-display');
-  if (!state.equippedBait) {
-    el.innerHTML = `<div class="equipped-bait none">No bait equipped</div>`;
-    return;
+  const owned = BAITS.filter(b => state.baitInventory[b.id] > 0);
+
+  // Build options for bait selector
+  let options = '<option value="">No bait</option>';
+  owned.forEach(b => {
+    const sel = state.equippedBait === b.id ? 'selected' : '';
+    options += `<option value="${b.id}" ${sel}>${b.name} (+${b.luck} Luck) x${state.baitInventory[b.id]}</option>`;
+  });
+
+  if (state.equippedBait && state.baitInventory[state.equippedBait] > 0) {
+    const bait = BAITS.find(b => b.id === state.equippedBait);
+    const count = state.baitInventory[state.equippedBait];
+    el.innerHTML = `
+      <div class="equipped-bait">
+        <span class="bait-dot"></span>
+        <select class="bait-select" onchange="equipBait(this.value||null)">${options}</select>
+      </div>`;
+  } else {
+    el.innerHTML = `
+      <div class="equipped-bait none">
+        <select class="bait-select" onchange="equipBait(this.value||null)">${options}</select>
+      </div>`;
   }
-  const bait = BAITS.find(b => b.id === state.equippedBait);
-  const count = state.baitInventory[state.equippedBait];
-  el.innerHTML = `
-    <div class="equipped-bait">
-      <span class="bait-dot"></span>
-      Equipped: <strong>${bait.name}</strong> (+${bait.luck} Luck) — <span class="bait-count">x${count}</span>
-    </div>`;
 }
 
 function updateBaitShop() {
