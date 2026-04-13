@@ -2791,13 +2791,27 @@ function playSellSound() {
 // WEIGHTED RANDOM FISHING
 // ================================================================
 
-/**
- * Get the current luck bonus from equipped bait + passive stage bonus.
- * Bait luck is the direct value on the bait object. Passive stage luck is
- * rank.stage * 2 (so Bronze=0, Silver=2, Gold=4, ..., Grandmaster=12).
- */
+/** Count total sub-levels completed (e.g. Bronze 2 = 1, Silver 1 = 3, Gold 3 = 8) */
+function getRankSubLevel() {
+  let total = 0;
+  for (let s = 0; s < state.rank.stage; s++) total += RANK_STAGES[s].levels;
+  total += state.rank.level;
+  return total;
+}
+
+/** Displayed luck (shown in UI) — +5 per sub-level */
+function getDisplayLuck() {
+  let luck = getRankSubLevel() * 5;
+  if (state.equippedBait && state.baitInventory[state.equippedBait] > 0) {
+    const bait = BAITS.find(b => b.id === state.equippedBait);
+    if (bait) luck += bait.luck;
+  }
+  return luck;
+}
+
+/** Actual luck used in catch calculations — +2 per sub-level */
 function getTotalLuck() {
-  let luck = state.rank.stage * 2;
+  let luck = getRankSubLevel() * 2;
   if (state.equippedBait && state.baitInventory[state.equippedBait] > 0) {
     const bait = BAITS.find(b => b.id === state.equippedBait);
     if (bait) luck += bait.luck;
@@ -3557,16 +3571,15 @@ function updateRankDisplay() {
   el.classList.toggle('rank-rainbow', !!stage.rainbow);
   el.classList.toggle('rank-funny', !!stage.funny);
 
-  // Luck display in status bar
+  // Luck display in status bar — shows inflated display value
   const luckEl = document.getElementById('luck-display');
-  const luck = getTotalLuck();
-  luckEl.textContent = `+${luck}`;
+  luckEl.textContent = `+${getDisplayLuck()}`;
 }
 
 function updateRankProgress() {
   const el = document.getElementById('rank-progress-display');
   const stage = RANK_STAGES[state.rank.stage];
-  const luck = getTotalLuck();
+  const luck = getDisplayLuck();
 
   if (isMaxRank()) {
     el.innerHTML = `
@@ -4629,7 +4642,7 @@ function renderAdminPanel(overlay) {
       <div class="admin-stat"><div class="label">Total Fish</div><div class="val">${state.totalFishCaught.toLocaleString()}</div></div>
       <div class="admin-stat"><div class="label">Net Worth</div><div class="val">$${getNetWorth().toLocaleString()}</div></div>
       <div class="admin-stat"><div class="label">Rank</div><div class="val">${rankString(state.rank)}</div></div>
-      <div class="admin-stat"><div class="label">Luck</div><div class="val">+${getTotalLuck()}</div></div>
+      <div class="admin-stat"><div class="label">Luck</div><div class="val">+${getDisplayLuck()}</div></div>
       <div class="admin-stat"><div class="label">Inventory</div><div class="val">${state.inventory.length}/${MAX_INVENTORY}</div></div>
     </div>`;
 
